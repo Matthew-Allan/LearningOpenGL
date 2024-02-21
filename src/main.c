@@ -28,6 +28,7 @@
 #define GLAD_PROFILE_MASK SDL_GL_CONTEXT_PROFILE_CORE
 
 #define VSYNC 1
+#define POLYGON_MODE GL_LINE
 
 #define GET_MILLIS(timer) (1000 * (timer).time + (timer).millitm)
 
@@ -121,32 +122,22 @@ App *setUpApp()
     return app;
 }
 
-GLuint createShaderProgram(App *app)
+GLuint loadShader(char *relativePath, App *app, int type)
 {
-    char *vsRelPath = "\\shaders\\shader.vs";
-    char vsAbsPath[strlen(app->path) + strlen(vsRelPath)];
-    vsAbsPath[0] = '\0';
+    char absolutePath[strlen(app->path) + strlen(relativePath)];
+    absolutePath[0] = '\0';
 
-    char *fsRelPath = "\\shaders\\shader.fs";
-    char fsAbsPath[strlen(app->path) + strlen(fsRelPath)];
-    fsAbsPath[0] = '\0';
+    return compileShader(CAT_STRINGS(app->path, relativePath, absolutePath), type);
+}
 
-    GLuint vertexShader;
-    GLuint fragmentShader;
-
-    if ((vertexShader = compileShader(CAT_STRINGS(app->path, vsRelPath, vsAbsPath), GL_VERTEX_SHADER)) == 0)
-        return 0;
-    if ((fragmentShader = compileShader(CAT_STRINGS(app->path, fsRelPath, fsAbsPath), GL_FRAGMENT_SHADER)) == 0)
-        return 0;
-
+GLuint createProgram(App *app, GLuint shaders[], size_t shaderCount)
+{
     GLuint shaderProgram = glCreateProgram();
 
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+    for(int i = 0; i < shaderCount; i++)
+        glAttachShader(shaderProgram, shaders[i]);
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glLinkProgram(shaderProgram);
 
     int success;
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
@@ -176,27 +167,6 @@ void resizeViewport(SDL_Window *window)
     int width, height;
     SDL_GL_GetDrawableSize(window, &width, &height);
     glViewport(0, 0, width, height);
-}
-
-void pollEvents(App *app)
-{
-    SDL_Event e;
-
-    while (SDL_PollEvent(&e))
-    {
-        // If the switch statement isn't the most truly ugly bit of syntax, I dont know what is.
-        switch (e.type)
-        {
-        case SDL_QUIT:
-            app->running = false;
-        case SDL_WINDOWEVENT:
-            if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-                resizeViewport(app->window);
-            break;
-        default:
-            break;
-        }
-    }
 }
 
 GLuint createEBO(GLuint indices[], size_t verticesSize)
@@ -242,6 +212,27 @@ GLuint createVAO(float vertices[], size_t verticesSize, GLuint indices[], size_t
     return VAO;
 }
 
+void pollEvents(App *app)
+{
+    SDL_Event e;
+
+    while (SDL_PollEvent(&e))
+    {
+        // If the switch statement isn't the most truly ugly bit of syntax, I dont know what is.
+        switch (e.type)
+        {
+        case SDL_QUIT:
+            app->running = false;
+        case SDL_WINDOWEVENT:
+            if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                resizeViewport(app->window);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
 void drawCall(App *app, GLuint shaderProgram, GLuint *VAO, GLuint *vertexCounts, size_t VAOCount)
 {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -272,12 +263,23 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    GLuint shaders[2];
+    size_t shaderCount = 2;
+
+    if ((shaders[0] = loadShader("\\shaders\\shader.vs", app, GL_VERTEX_SHADER)) == 0)
+        return 1;
+    if ((shaders[1] = loadShader("\\shaders\\shader.fs", app, GL_FRAGMENT_SHADER)) == 0)
+        return 1;
+
     GLuint shaderProgram;
-    if ((shaderProgram = createShaderProgram(app)) == 0)
+    if ((shaderProgram = createProgram(app, shaders, shaderCount)) == 0)
     {
         closeApp(app);
-        return 0;
+        return 1;
     }
+
+    for(int i = 0; i < shaderCount; i++)
+        glDeleteShader(shaders[i]);
 
     GLuint VAOs[1];
     GLuint vertexCounts[1];
@@ -297,7 +299,7 @@ int main(int argc, char *argv[])
     VAOs[0] = createVAO(vertices, sizeof(vertices), indices, sizeof(indices));
     vertexCounts[0] = 6;
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, POLYGON_MODE);
 
     while (app->running)
     {
