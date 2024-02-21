@@ -1,6 +1,6 @@
+#include <stdio.h>
 #include <SDL2/SDL.h>
 #include <glad/glad.h>
-#include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
 #include <string.h>
@@ -12,6 +12,7 @@
 #define GET_PATH(out, len) GetModuleFileName(NULL, out, len)
 #define PATH_SEPERATOR '\\'
 
+// Linux remains untested
 #elif __linux__
 #include <unistd.h>
 #define GET_PATH(out, len) readlink("/proc/self/exe", out, len);
@@ -29,10 +30,6 @@
 
 #define VSYNC 1
 #define POLYGON_MODE GL_LINE
-
-#define GET_MILLIS(timer) (1000 * (timer).time + (timer).millitm)
-
-#define MAX()
 
 #define CAT_STRINGS(a, b, dest) (strcat(strcat((dest), (a)), (b)))
 
@@ -61,9 +58,10 @@ void getPath(App *app)
 
 App *setUpApp()
 {
-    SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
+    //SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    printf("Initialising SLD\n");
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
         printf("SDL could not init. Error: %s\n", SDL_GetError());
         return NULL;
@@ -83,6 +81,7 @@ App *setUpApp()
         return NULL;
     }
 
+    printf("Creating Window\n");
     SDL_Window *window = SDL_CreateWindow("Hello, World!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT, SCREEN_FLAGS);
 
     if (window == NULL)
@@ -91,6 +90,7 @@ App *setUpApp()
         return NULL;
     }
 
+    printf("Creating OpenGL context\n");
     SDL_GL_CreateContext(window);
 
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
@@ -118,6 +118,8 @@ App *setUpApp()
 
     app->running = true;
     app->window = window;
+
+    printf("App initialised\n");
 
     return app;
 }
@@ -255,22 +257,25 @@ void drawCall(App *app, GLuint shaderProgram, GLuint *VAO, GLuint *vertexCounts,
 
 int main(int argc, char *argv[])
 {
+    printf("Initialising App\n");
     App *app;
 
     if ((app = setUpApp()) == NULL)
     {
-        SDL_DestroyWindow(app->window);
         return 1;
     }
 
     GLuint shaders[2];
     size_t shaderCount = 2;
 
+    printf("Loading/Compiling shaders\\shader.vs\n");
     if ((shaders[0] = loadShader("\\shaders\\shader.vs", app, GL_VERTEX_SHADER)) == 0)
         return 1;
+    printf("Loading/Compiling shaders\\shader.fs\n");
     if ((shaders[1] = loadShader("\\shaders\\shader.fs", app, GL_FRAGMENT_SHADER)) == 0)
         return 1;
 
+    printf("Creating shader program\n");
     GLuint shaderProgram;
     if ((shaderProgram = createProgram(app, shaders, shaderCount)) == 0)
     {
@@ -296,10 +301,13 @@ int main(int argc, char *argv[])
         0, 1, 3,
         1, 2, 3};
 
+    printf("Creating VAO\n");
     VAOs[0] = createVAO(vertices, sizeof(vertices), indices, sizeof(indices));
     vertexCounts[0] = 6;
 
     glPolygonMode(GL_FRONT_AND_BACK, POLYGON_MODE);
+
+    printf("Done\n");
 
     while (app->running)
     {
