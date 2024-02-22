@@ -7,6 +7,7 @@
 #include "shader.h"
 #include "app.h"
 #include "buffers.h"
+#include "image.h"
 
 #define DEFAULT_SCREEN_WIDTH 640
 #define DEFAULT_SCREEN_HEIGHT 640
@@ -43,10 +44,18 @@ SDL_Window *setUpWindow()
         return NULL;
     }
 
+    printf("Initialising SLD_image\n");
+    if (init_image() < 0)
+    {
+        SDL_Quit();
+        return NULL;
+    }
+
     printf("Setting GL attributes\n");
     if (setGLAttributes() < 0)
     {
         printf("Setting attributes failed. Error: %s\n", SDL_GetError());
+        SDL_Quit();
         return NULL;
     }
 
@@ -56,6 +65,7 @@ SDL_Window *setUpWindow()
     if (window == NULL)
     {
         printf("Window could not be created. Error: %s\n", SDL_GetError());
+        SDL_Quit();
         return NULL;
     }
 
@@ -66,6 +76,7 @@ SDL_Window *setUpWindow()
     {
         printf("Failed to initialize GLAD\n");
         SDL_DestroyWindow(window);
+        SDL_Quit();
         return NULL;
     }
 
@@ -73,6 +84,7 @@ SDL_Window *setUpWindow()
     {
         printf("Could not enable vsync. Error: %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
+        SDL_Quit();
         return NULL;
     }
 
@@ -109,7 +121,7 @@ void pollEvents(App *app)
     }
 }
 
-void draw(App *app, GLuint shaderProgram, GLuint *VAO, GLuint *vertexCounts, size_t VAOCount)
+void draw(App *app, GLuint shaderProgram, VertexAttributeObject *VAO, size_t VAOCount)
 {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -121,8 +133,8 @@ void draw(App *app, GLuint shaderProgram, GLuint *VAO, GLuint *vertexCounts, siz
 
     for (int i = 0; i < VAOCount; i++)
     {
-        glBindVertexArray(VAO[i]);
-        glDrawElements(GL_TRIANGLES, vertexCounts[i], GL_UNSIGNED_INT, 0);
+        glBindVertexArray(VAO[i].vao);
+        glDrawElements(GL_TRIANGLES, VAO[i].count, GL_UNSIGNED_INT, 0);
     }
 }
 
@@ -159,8 +171,7 @@ int main(int argc, char *argv[])
     for (int i = 0; i < shaderCount; i++)
         glDeleteShader(shaders[i]);
 
-    GLuint VAOs[1];
-    GLuint vertexCounts[1];
+    VertexAttributeObject VAOs[1];
 
     // VAO 0
 
@@ -179,12 +190,16 @@ int main(int argc, char *argv[])
     vertexAttributes[1] = (VertexAttribute){1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float))};
 
     printf("Creating VAO\n");
-    VAOs[0] = createVAO(vertices, sizeof(vertices), indices, sizeof(indices), vertexAttributes, 2);
-    vertexCounts[0] = 6;
+    VAOs[0] = (VertexAttributeObject){createVAO(vertices, sizeof(vertices), indices, sizeof(indices), vertexAttributes, 2), 6};
 
     glPolygonMode(GL_FRONT_AND_BACK, POLYGON_MODE);
 
     printf("Done!\n");
+
+    int channels;
+    size_t width, height;
+    readImageRsrc("img/Shield.png", app, &width, &height, &channels);
+    printf("(%d, %d) %d\n", width, height, channels);
 
     while (app->running)
     {
@@ -192,7 +207,7 @@ int main(int argc, char *argv[])
         pollEvents(app);
 
         // Draw to screen
-        draw(app, shaderProgram, VAOs, vertexCounts, 1);
+        draw(app, shaderProgram, VAOs, 1);
 
         // Flip buffers.
         SDL_GL_SwapWindow(app->window);

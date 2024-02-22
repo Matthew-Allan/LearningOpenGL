@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "image.h"
 #include "app.h"
 
 #ifdef _WIN32
@@ -10,7 +11,6 @@
 #define PATH_SEPERATOR '\\'
 #endif
 
-// Linux remains untested
 #ifdef __linux__
 #include <unistd.h>
 #define GET_PATH(out, len) readlink("/proc/self/exe", out, len);
@@ -18,6 +18,7 @@
 #endif
 
 #define CAT_STRINGS(a, b, dest) (strcat(strcat((dest), (a)), (b)))
+#define GET_ABS_PATH(name, relPath, appPath) char (name)[strlen(appPath) + strlen(relPath) + 1]; (name)[0] = '\0'; CAT_STRINGS(appPath, relPath, name)
 
 void getPath(char **out)
 {
@@ -74,27 +75,31 @@ size_t getFileSize(FILE *file_pointer)
     return size;
 }
 
-char *readFile(char *filepath)
+void *readFile(char *filepath)
 {
     FILE *file_pointer;
     if ((file_pointer = fopen(filepath, "r")) == NULL)
         return NULL;
 
     size_t file_size = getFileSize(file_pointer);
-    char *contents = (char *)malloc(sizeof(char) * (file_size + 1));
+    void *contents = (char *)malloc(file_size + 1);
 
     fread(contents, 1, file_size, file_pointer);
-    contents[file_size] = '\0';
+    ((char *)contents)[file_size] = '\0';
 
     fclose(file_pointer);
 
     return contents;
 }
 
-char *readResource(char *relativePath, App *app)
+void *readResource(char *relativePath, App *app)
 {
-    char absolutePath[strlen(app->path) + strlen(relativePath) + 1];
-    absolutePath[0] = '\0';
-    CAT_STRINGS(app->path, relativePath, absolutePath);
+    GET_ABS_PATH(absolutePath, relativePath, app->path);
     return readFile(absolutePath);
+}
+
+uint8_t *readImageRsrc(char *relativePath, App *app, size_t *width, size_t *height, int *nrChannels)
+{
+    GET_ABS_PATH(absolutePath, relativePath, app->path);
+    return loadImage(absolutePath, width, height, nrChannels);
 }

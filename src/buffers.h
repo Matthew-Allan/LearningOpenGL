@@ -13,6 +13,11 @@ typedef struct
     GLvoid *pointer;
 } VertexAttribute;
 
+typedef struct{
+    GLuint vao;
+    GLuint count;
+} VertexAttributeObject;
+
 GLuint createEBO(GLuint indices[], size_t verticesSize);
 GLuint createVBO(void *vertices, size_t verticesSize, VertexAttribute *vertexAttrs, size_t vertexAttrCount);
 GLuint createVAO(void *vertices, size_t verticesSize, GLuint indices[], size_t indicesSize, VertexAttribute *vertexAttrs, size_t vertexAttrCount);
