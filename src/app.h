@@ -13,5 +13,6 @@ typedef struct
 
 App *setUpApp(SDL_Window *window);
 int closeApp(App *app, int code);
+char *readResource(char *relativePath, App *app);
 
 #endif

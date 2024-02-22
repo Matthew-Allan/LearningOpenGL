@@ -3,49 +3,23 @@
 
 #include "shader.h"
 
-#define CAT_STRINGS(a, b, dest) (strcat(strcat((dest), (a)), (b)))
-
-size_t getFileSize(FILE *file_pointer)
+GLuint loadShader(char *relativePath, App *app, int type)
 {
-    size_t size = 0;
-    long prev_pos = ftell(file_pointer);
-    for (char ch = fgetc(file_pointer); ch != EOF; ch = fgetc(file_pointer))
-        size++;
-    fseek(file_pointer, prev_pos, SEEK_SET);
-    return size;
-}
+    printf("Loading/Compiling %s\n", relativePath);
 
-char *readFile(char *filepath)
-{
-    FILE *file_pointer;
-    if ((file_pointer = fopen(filepath, "r")) == NULL)
-        return NULL;
-
-    size_t file_size = getFileSize(file_pointer);
-    char *contents = (char *)malloc(sizeof(char) * (file_size + 1));
-
-    fread(contents, 1, file_size, file_pointer);
-    contents[file_size] = '\0';
-
-    fclose(file_pointer);
-
-    return contents;
-}
-
-GLuint compileShader(char *filepath, int type)
-{
-    const char *source;
-    if ((source = readFile(filepath)) == NULL)
+    char *source;
+    if ((source = readResource(relativePath, app)) == NULL)
     {
-        printf("Failed to load shader file. (\"%s\")\n", filepath);
+        printf("Failed to load shader file. (\"%s\")\n", relativePath);
         return 0;
     }
 
     printf("%s\n", source);
 
     GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, NULL);
+    glShaderSource(shader, 1, (const char **)&source, NULL);
     glCompileShader(shader);
+    free(source);
 
     int success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
@@ -54,22 +28,14 @@ GLuint compileShader(char *filepath, int type)
     {
         char infoLog[512];
         glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        printf("Shader compilation failed (\"%s\"): Error %s\n", filepath, infoLog);
+        printf("Shader compilation failed (\"%s\"): Error %s\n", relativePath, infoLog);
         glDeleteShader(shader);
         return 0;
     }
     return shader;
 }
 
-GLuint loadShader(char *relativePath, App *app, int type)
-{
-    char absolutePath[strlen(app->path) + strlen(relativePath)];
-    absolutePath[0] = '\0';
-
-    return compileShader(CAT_STRINGS(app->path, relativePath, absolutePath), type);
-}
-
-GLuint createProgram(App *app, GLuint shaders[], size_t shaderCount)
+GLuint createProgram(GLuint shaders[], size_t shaderCount)
 {
     GLuint shaderProgram = glCreateProgram();
 

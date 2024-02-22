@@ -146,16 +146,14 @@ int main(int argc, char *argv[])
     GLuint shaders[2];
     size_t shaderCount = 2;
 
-    printf("Loading/Compiling shaders\\shader.vs\n");
-    if ((shaders[0] = loadShader("/shaders/shader.vs", app, GL_VERTEX_SHADER)) == 0)
+    if ((shaders[0] = loadShader("shaders/shader.vs", app, GL_VERTEX_SHADER)) == 0)
         return closeApp(app, 1);
-    printf("Loading/Compiling shaders\\shader.fs\n");
-    if ((shaders[1] = loadShader("/shaders/shader.fs", app, GL_FRAGMENT_SHADER)) == 0)
+    if ((shaders[1] = loadShader("shaders/shader.fs", app, GL_FRAGMENT_SHADER)) == 0)
         return closeApp(app, 1);
 
     printf("Creating shader program\n");
     GLuint shaderProgram;
-    if ((shaderProgram = createProgram(app, shaders, shaderCount)) == 0)
+    if ((shaderProgram = createProgram(shaders, shaderCount)) == 0)
         return closeApp(app, 1);
 
     for (int i = 0; i < shaderCount; i++)

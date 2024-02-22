@@ -17,6 +17,8 @@
 #define PATH_SEPERATOR '/'
 #endif
 
+#define CAT_STRINGS(a, b, dest) (strcat(strcat((dest), (a)), (b)))
+
 void getPath(char **out)
 {
     size_t pathlen = 5;
@@ -29,7 +31,7 @@ void getPath(char **out)
     }
     *out = (char *)malloc(sizeof(char) * pathlen);
     GET_PATH(*out, pathlen);
-    char *endOfDir = strrchr(*out, PATH_SEPERATOR);
+    char *endOfDir = strrchr(*out, PATH_SEPERATOR) + 1;
     *endOfDir = '\0';
 }
 
@@ -60,4 +62,39 @@ int closeApp(App *app, int code)
     SDL_Quit();
     printf("Goodbye!");
     return code;
+}
+
+size_t getFileSize(FILE *file_pointer)
+{
+    size_t size = 0;
+    long prev_pos = ftell(file_pointer);
+    for (char ch = fgetc(file_pointer); ch != EOF; ch = fgetc(file_pointer))
+        size++;
+    fseek(file_pointer, prev_pos, SEEK_SET);
+    return size;
+}
+
+char *readFile(char *filepath)
+{
+    FILE *file_pointer;
+    if ((file_pointer = fopen(filepath, "r")) == NULL)
+        return NULL;
+
+    size_t file_size = getFileSize(file_pointer);
+    char *contents = (char *)malloc(sizeof(char) * (file_size + 1));
+
+    fread(contents, 1, file_size, file_pointer);
+    contents[file_size] = '\0';
+
+    fclose(file_pointer);
+
+    return contents;
+}
+
+char *readResource(char *relativePath, App *app)
+{
+    char absolutePath[strlen(app->path) + strlen(relativePath) + 1];
+    absolutePath[0] = '\0';
+    CAT_STRINGS(app->path, relativePath, absolutePath);
+    return readFile(absolutePath);
 }
