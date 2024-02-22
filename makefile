@@ -19,7 +19,9 @@ build-terminal:
 	gcc $(unixGccBase)
 build-unix:
 	gcc $(unixGccBase)
-run:
+run-windows:
 	$(srcdir)main.exe
+run-unix:
+	$(srcdir)main
 test-gcc-base:
 	$(gccBase)
