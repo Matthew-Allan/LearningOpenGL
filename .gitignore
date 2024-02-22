@@ -1,2 +1,4 @@
 main.exe
 .vscode
+lib
+include/SDL2
