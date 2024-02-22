@@ -1,11 +1,18 @@
-srcdir := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-files := ${srcdir}/src/main.c $(srcdir)/src/glad.c $(srcdir)/src/shader.c
+srcdir := "$(dir $(abspath $(lastword $(MAKEFILE_LIST))))"
+files := main glad/glad shader app buffers
 outputnm := main.exe
+libs := mingw32 SDL2main SDL2
+gccBase := -o $(srcdir)$(outputnm) $(patsubst %,${srcdir}src/%.c,$(files)) -I$(srcdir)include -L$(srcdir)lib $(patsubst %,-l%,$(libs))
+
 
 all:
-	gcc $(files) -I$(srcdir)/include/ -L$(srcdir)/lib -lmingw32 -lSDL2main -lSDL2 -o $(srcdir)/$(outputnm)"
-	$(srcdir)/main.exe
+	gcc $(gccBase)
+	$(srcdir)main.exe
+build-console:
+	gcc $(gccBase)
 build:
-	gcc ${srcdir}/src/main.c $(srcdir)/src/glad.c -I$(srcdir)/include/ -L$(srcdir)/lib -lmingw32 -lSDL2main -lSDL2 -o $(srcdir)/main.exe"
+	gcc $(gccBase) -mwindows
 run:
-	$(srcdir)/main.exe
+	$(srcdir)main.exe
+test-gcc-base:
+	$(gccBase)
