@@ -114,9 +114,13 @@ void draw(App *app, GLuint shaderProgram, GLuint *VAO, GLuint *vertexCounts, siz
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    glUseProgram(shaderProgram);
+    GLuint ticksPos = glGetUniformLocation(shaderProgram, "ticks");
+    int ticks = SDL_GetTicks64();
+    glUniform1i(ticksPos, ticks);
+
     for (int i = 0; i < VAOCount; i++)
     {
-        glUseProgram(shaderProgram);
         glBindVertexArray(VAO[i]);
         glDrawElements(GL_TRIANGLES, vertexCounts[i], GL_UNSIGNED_INT, 0);
     }
