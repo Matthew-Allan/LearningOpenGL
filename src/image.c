@@ -2,11 +2,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include "image.h"
 
 #define SUPPORTED_IMAGE_TYPES IMG_INIT_PNG
+#define GET_SIZE(width, height, channels) ((width) * (height) * (channels))
+#define GET_ROW_OFFSET(y, width, channels) ((y) * (width) * (channels))
+#define GET_FL_ROW_OFFSET(y, width, height, channels) (((height) - (y) - 1) * (width) * (channels))
+#define GET_COL_OFFSET(x, channels) ((x) * (channels))
+#define GET_OFFSET(x, y, width, channels) (GET_ROW_OFFSET(y, width, channels) + GET_COL_OFFSET(x, channels))
 
 int init_image()
 {
@@ -16,7 +22,7 @@ int init_image()
     return error;
 }
 
-uint8_t *loadImage(char *path, size_t *width, size_t *height, int *nrChannels)
+uint8_t *loadImage(char *path, size_t *width, size_t *height, int *nrChannels, bool flipImage)
 {
     // Load image at specified path
     SDL_Surface *image = IMG_Load(path);
@@ -40,7 +46,11 @@ uint8_t *loadImage(char *path, size_t *width, size_t *height, int *nrChannels)
         return NULL;
     }
     
-    memcpy(data, image->pixels, dataSize);
+    if(!flipImage)
+        memcpy(data, image->pixels, dataSize);
+    else
+        for(int i = 0; i < *height; i++)
+            memcpy(data + GET_ROW_OFFSET(i, *width, *nrChannels), image->pixels + GET_FL_ROW_OFFSET(i, *width, *height, *nrChannels), GET_SIZE(*width, 1, *nrChannels));
 
     SDL_FreeSurface(image);
 

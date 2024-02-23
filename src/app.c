@@ -110,5 +110,5 @@ void *readResource(char *relativePath, App *app)
 uint8_t *readImageRsrc(char *relativePath, App *app, size_t *width, size_t *height, int *nrChannels)
 {
     GET_ABS_PATH(absolutePath, relativePath, app->path);
-    return loadImage(absolutePath, width, height, nrChannels);
+    return loadImage(absolutePath, width, height, nrChannels, true);
 }
