@@ -10,5 +10,5 @@ void main()
 {
     vec4 forground = texture(texture0, TexCoord);
     vec4 background = texture(texture1, TexCoord);
-    FragColor = forground * (1.0 - background.a) + background;
+    FragColor = forground * (1.0 - background.a) + (background * vec4(vertexColor + vec3(0.5, 0.5, 0.5), 1.0));
 } 
