@@ -33,7 +33,14 @@ uint8_t *loadImage(char *path, size_t *width, size_t *height, int *nrChannels)
     size_t dataSize = *width * *height * *nrChannels;
 
     uint8_t *data = (uint8_t *)malloc(dataSize);
-    memcpy(data, image, dataSize);
+    if(data == NULL)
+    {
+        printf("Unable to load image. Not enough space\n");
+        SDL_FreeSurface(image);
+        return NULL;
+    }
+    
+    memcpy(data, image->pixels, dataSize);
 
     SDL_FreeSurface(image);
 

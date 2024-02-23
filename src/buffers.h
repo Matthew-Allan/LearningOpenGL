@@ -16,6 +16,9 @@ typedef struct
 typedef struct{
     GLuint vao;
     GLuint count;
+    GLuint textures[32];
+    GLenum units[32];
+    int textureCount;
 } VertexAttributeObject;
 
 GLuint createEBO(GLuint indices[], size_t verticesSize);

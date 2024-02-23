@@ -3,23 +3,13 @@
 
 #include "shader.h"
 
-GLuint loadShader(char *relativePath, App *app, int type)
+GLuint loadShader(char *source, int type)
 {
-    printf("Loading/Compiling %s\n", relativePath);
-
-    char *source;
-    if ((source = readResource(relativePath, app)) == NULL)
-    {
-        printf("Failed to load shader file. (\"%s\")\n", relativePath);
-        return 0;
-    }
-
-    printf("%s\n", source);
+    printf("Loading shader\nSource:\n%s\n", source);
 
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, (const char **)&source, NULL);
     glCompileShader(shader);
-    free(source);
 
     int success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
@@ -28,7 +18,7 @@ GLuint loadShader(char *relativePath, App *app, int type)
     {
         char infoLog[512];
         glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        printf("Shader compilation failed (\"%s\"): Error %s\n", relativePath, infoLog);
+        printf("Shader compilation failed: Error %s\n", infoLog);
         glDeleteShader(shader);
         return 0;
     }

@@ -79,10 +79,19 @@ void *readFile(char *filepath)
 {
     FILE *file_pointer;
     if ((file_pointer = fopen(filepath, "r")) == NULL)
+    {
+        printf("Failed to load \"%s\".", filepath);
         return NULL;
+    }
 
     size_t file_size = getFileSize(file_pointer);
     void *contents = (char *)malloc(file_size + 1);
+    if (contents == NULL)
+    {
+        printf("Failed to load \"%s\". No space.", filepath);
+        fclose(file_pointer);
+        return NULL;
+    }
 
     fread(contents, 1, file_size, file_pointer);
     ((char *)contents)[file_size] = '\0';

@@ -1,5 +1,5 @@
 srcdir := "$(dir $(abspath $(lastword $(MAKEFILE_LIST))))"
-files := main shader app buffers image glad/glad 
+files := main shader app buffers image texture glad/glad 
 outputnm := main
 unixLibs := SDL2
 windowsLibs := mingw32 SDL2main SDL2

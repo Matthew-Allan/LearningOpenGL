@@ -6,7 +6,7 @@
 
 #include "app.h"
 
-GLuint loadShader(char *filepath, App *app, int type);
+GLuint loadShader(char *filepath, int type);
 GLuint createProgram(GLuint shaders[], size_t shaderCount);
 
 #endif
