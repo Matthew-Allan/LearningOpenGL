@@ -17,18 +17,27 @@
 #define PATH_SEPERATOR '/'
 #endif
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#define GET_PATH(out, len) _NSGetExecutablePath(out, (uint32_t *)&(len));
+#define PATH_SEPERATOR '/'
+#endif
+
 #define CAT_STRINGS(a, b, dest) (strcat(strcat((dest), (a)), (b)))
 #define GET_ABS_PATH(name, relPath, appPath) char (name)[strlen(appPath) + strlen(relPath) + 1]; (name)[0] = '\0'; CAT_STRINGS(appPath, relPath, name)
 
 void getPath(char **out)
 {
     size_t pathlen = 5;
-    size_t outputlen = pathlen;
+    ssize_t outputlen = pathlen;
     while (outputlen == pathlen)
     {
         pathlen += 10;
         char test[pathlen];
         outputlen = GET_PATH(test, pathlen);
+        if(outputlen < 0)
+            outputlen = pathlen;
+        printf("nuts %s\n", test);
     }
     *out = (char *)malloc(sizeof(char) * pathlen);
     GET_PATH(*out, pathlen);

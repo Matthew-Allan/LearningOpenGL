@@ -15,12 +15,19 @@
 #define SCREEN_FLAGS SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
 
 #define GLAD_MAJOR_VERSION 4
-#define GLAD_MINOR_VERSION 6
+#define GLAD_MINOR_VERSION 1
 #define GLAD_PROFILE_MASK SDL_GL_CONTEXT_PROFILE_CORE
 
 #define POLYGON_MODE GL_FILL
 
 #define VSYNC 1
+
+void resizeViewport(SDL_Window *window)
+{
+    int width, height;
+    SDL_GL_GetDrawableSize(window, &width, &height);
+    glViewport(0, 0, width, height);
+}
 
 int setGLAttributes()
 {
@@ -28,7 +35,6 @@ int setGLAttributes()
     errorCheck += SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, GLAD_MAJOR_VERSION);
     errorCheck += SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, GLAD_MINOR_VERSION);
     errorCheck += SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, GLAD_PROFILE_MASK);
-    errorCheck += SDL_GL_SetAttribute(SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG, true);
     errorCheck += SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, true);
     errorCheck += SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     return errorCheck;
@@ -80,6 +86,8 @@ SDL_Window *setUpWindow()
         SDL_Quit();
         return NULL;
     }
+    
+    printf("%s\n", glGetString(GL_VERSION));
 
     if (SDL_GL_SetSwapInterval(VSYNC) != 0)
     {
@@ -93,16 +101,9 @@ SDL_Window *setUpWindow()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
-    glViewport(0, 0, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT);
+    resizeViewport(window);
 
     return window;
-}
-
-void resizeViewport(SDL_Window *window)
-{
-    int width, height;
-    SDL_GL_GetDrawableSize(window, &width, &height);
-    glViewport(0, 0, width, height);
 }
 
 void pollEvents(App *app)

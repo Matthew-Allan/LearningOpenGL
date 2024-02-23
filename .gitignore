@@ -1,5 +1,7 @@
 main.exe
 main
+main.app
+main.app.dSYM
 .vscode
 lib
 include/SDL2
