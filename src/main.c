@@ -169,8 +169,8 @@ int main(int argc, char *argv[])
     GLuint shaders[2];
     size_t shaderCount = 2;
 
-    char *vsSource = readResource("shaders/fragment.glsl", app);
-    char *fsSource = readResource("shaders/vertex.glsl", app);
+    char *vsSource = readResource("shaders/vertex.glsl", app);
+    char *fsSource = readResource("shaders/fragment.glsl", app);
 
     if(vsSource == NULL || fsSource == NULL)
         return closeApp(app, 1);
