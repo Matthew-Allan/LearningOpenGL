@@ -196,10 +196,10 @@ int main(int argc, char *argv[])
     // VAO 0
 
     float vertices[] = {
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f};
+        1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f};
 
     GLuint indices[] = {
         0, 1, 3,
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
     if(data1 == NULL)
         return closeApp(app, 1);
 
-    VAOs[0].textures[0] = createTexture(width1, height1, data1);
+    VAOs[0].textures[0] = createTexture(width1, height1, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE, data1);
     VAOs[0].units[0] = GL_TEXTURE0;
     free(data1);
     
@@ -238,13 +238,39 @@ int main(int argc, char *argv[])
     if(data2 == NULL)
         return closeApp(app, 1);
 
-    VAOs[0].textures[1] = createTexture(width2, height2, data2);
+    VAOs[0].textures[1] = createTexture(width2, height2, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE, data2);
     VAOs[0].units[1] = GL_TEXTURE1;
     free(data2);
     
     glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 1);
 
-    VAOs[0].textureCount = 2;
+    int channels3;
+    size_t width3, height3;
+    uint8_t *data3 = readImageRsrc("img/water-normal.png", app, &width3, &height3, &channels3);
+
+    if(data3 == NULL)
+        return closeApp(app, 1);
+
+    VAOs[0].textures[2] = createTexture(width3, height3, GL_RGB, GL_LINEAR, GL_REPEAT, data3);
+    VAOs[0].units[2] = GL_TEXTURE2;
+    free(data3);
+    
+    glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 2);
+
+    int channels4;
+    size_t width4, height4;
+    uint8_t *data4 = readImageRsrc("img/rt-caustics-grayscale.png", app, &width4, &height4, &channels4);
+
+    if(data4 == NULL)
+        return closeApp(app, 1);
+
+    VAOs[0].textures[3] = createTexture(width4, height4, GL_RGB, GL_LINEAR, GL_REPEAT, data4);
+    VAOs[0].units[3] = GL_TEXTURE3;
+    free(data4);
+    
+    glUniform1i(glGetUniformLocation(shaderProgram, "texture3"), 3);
+
+    VAOs[0].textureCount = 4;
 
     while (app->running)
     {

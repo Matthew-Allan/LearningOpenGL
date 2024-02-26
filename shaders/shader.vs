@@ -6,16 +6,41 @@ out vec3 vertexColor;
 out vec2 TexCoord;
 uniform int ticks;
 
+vec3 rotatex(vec3 vector, float angle)
+{
+    float cosval = cos(angle);
+    float sinval = sin(angle);
+    return mat3(vec3(1, 0, 0), vec3(0, cosval, -sinval) ,vec3(0, sinval, cosval)) * vector;
+}
+
+vec3 rotatey(vec3 vector, float angle)
+{
+    float cosval = cos(angle);
+    float sinval = sin(angle);
+    return mat3(vec3(cosval, 0, sinval), vec3(0, 1, 0) ,vec3(-sinval, 0, cosval)) * vector;
+}
+
+vec3 rotatez(vec3 vector, float angle)
+{
+    float cosval = cos(angle);
+    float sinval = sin(angle);
+    return mat3(vec3(cosval, -sinval, 0), vec3(sinval, cosval, 0) ,vec3(0, 0, 1)) * vector;
+}
+
+vec3 wiggle(vec3 vector, float time)
+{
+    float sum = vector.y + vector.x;
+    return vec3(vector.x + sin(time + sum) / 20, vector.y + cos(time + sum) / 20, vector.z);
+}
+
 void main()
 {
-    float theta = ticks / 1000.0;
-    vertexColor = aColor;
-    float sum = aPos.y + aPos.x;
-    vec3 rotate = aPos;
-    //rotate = mat3(vec3(1, 0, 0), vec3(0, cos(theta), -sin(theta)) ,vec3(0, sin(theta), cos(theta))) * rotate;
-    //rotate = mat3(vec3(cos(theta), 0, sin(theta)), vec3(0, 1, 0) ,vec3(-sin(theta), 0, cos(theta))) * rotate;
-    rotate = mat3(vec3(cos(theta), -sin(theta), 0), vec3(sin(theta), cos(theta), 0) ,vec3(0, 0, 1)) * rotate;
+    float seconds = ticks / 1000.0;
+    vec3 rotate = wiggle(aPos, seconds);
+    //rotate = rotatex(rotate, seconds / 10);
+    //rotate = rotatey(rotate, seconds / 10);
+    //rotate = rotatez(rotate, seconds / 10);
     gl_Position = vec4(rotate, 1.0);
-    //gl_Position = vec4(rotate.x + sin(theta + sum) / 20, rotate.y + cos(theta + sum) / 20, rotate.z, 1.0);
     TexCoord = aTexCoord;
+    vertexColor = aColor;
 }

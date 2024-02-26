@@ -4,6 +4,6 @@
 #include <glad/glad.h>
 #include <stdlib.h>
 
-GLuint createTexture(size_t width, size_t height, uint8_t *data);
+GLuint createTexture(size_t width, size_t height, int colourMode, int filterMode, int edge, uint8_t *data);
 
 #endif
