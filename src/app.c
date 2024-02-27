@@ -37,7 +37,6 @@ char *getPath()
         outputlen = GET_PATH(test, pathlen);
         if(outputlen < 0)
             outputlen = pathlen;
-        printf("nuts %s\n", test);
     }
     char * path = (char *)malloc(sizeof(char) * pathlen);
     GET_PATH(path, pathlen);
