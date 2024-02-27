@@ -87,7 +87,7 @@ SDL_Window *setUpWindow()
         return NULL;
     }
     
-    printf("%s\n", glGetString(GL_VERSION));
+    printf("GL Version: %s\n", glGetString(GL_VERSION));
 
     if (SDL_GL_SetSwapInterval(VSYNC) != 0)
     {
@@ -159,28 +159,20 @@ int loadVAOWithTextures(VertexAttributeObject **out, App *app, GLuint shaderProg
     *out = createVAOStruct(createVAO(vertices, sizeof(vertices), indices, sizeof(indices), vertexAttributes, 3), 6);
 
     Image *shipImage = readImageRsrc("img/Ship.png", app, true);
-    if(shipImage == NULL)
-        return 1;
-    addTexToVAO(*out, createTexture(shipImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture0", shaderProgram);
-    freeImage(shipImage);
-
     Image *shieldImage = readImageRsrc("img/Shield.png", app, true);
-    if(shieldImage == NULL)
-        return 1;
-    addTexToVAO(*out, createTexture(shieldImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture1", shaderProgram);
-    freeImage(shieldImage);
-
     Image *waterImage = readImageRsrc("img/water-normal.png", app, true);
-    if(waterImage == NULL)
-        return 1;
-    addTexToVAO(*out, createTexture(waterImage, GL_RGBA, GL_LINEAR, GL_REPEAT), "texture2", shaderProgram);
-    freeImage(waterImage);
-
     Image *causticsImage = readImageRsrc("img/rt-caustics-grayscale.png", app, true);
-    if(causticsImage == NULL)
+    
+    if(shipImage == NULL || shieldImage == NULL || waterImage == NULL || causticsImage == NULL)
         return 1;
-    addTexToVAO(*out, createTexture(causticsImage, GL_RGBA, GL_LINEAR, GL_REPEAT), "texture3", shaderProgram);
-    freeImage(causticsImage);
+
+    addTexToVAO(*out, createTexture(shipImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture0", shaderProgram);
+    addTexToVAO(*out, createTexture(shieldImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture1", shaderProgram);
+    addTexToVAO(*out, createTexture(waterImage, GL_RGB, GL_LINEAR, GL_REPEAT), "texture2", shaderProgram);
+    addTexToVAO(*out, createTexture(causticsImage, GL_RGB, GL_LINEAR, GL_REPEAT), "texture3", shaderProgram);
+
+    freeImages(app->images, &app->images, 4);
+    
     return 0;
 }
 
@@ -232,16 +224,14 @@ int main(int argc, char *argv[])
 
     // Set up window.
 
-    SDL_Window *window;
-
-    if ((window = setUpWindow()) == NULL)
+    SDL_Window *window = setUpWindow();
+    if (window == NULL)
         return 1;
 
     // Set up app.
 
-    App *app;
-
-    if ((app = setUpApp(window)) == NULL)
+    App *app = setUpApp(window);
+    if (app == NULL)
     {
         SDL_DestroyWindow(window);
         return 1;
@@ -249,9 +239,8 @@ int main(int argc, char *argv[])
 
     // Set up shader program
 
-    GLuint shaderProgram;
-
-    if((shaderProgram = setUpShaderProgram(app)) == 0)
+    GLuint shaderProgram = setUpShaderProgram(app);
+    if(shaderProgram == 0)
         return closeApp(app, 1);
 
     // VAOs.

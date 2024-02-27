@@ -11,9 +11,11 @@ typedef struct
     bool running;
     SDL_Window *window;
     char *path;
+    Image *images;
 } App;
 
 App *setUpApp(SDL_Window *window);
+void closeAppWindow(App *app);
 int closeApp(App *app, int code);
 void *readResource(char *relativePath, App *app);
 Image *readImageRsrc(char *relativePath, App *app, bool flipped);

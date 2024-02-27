@@ -50,6 +50,7 @@ Image *loadImage(char *path, bool flip)
     image->w = surface->w;
     image->h = surface->h;
     image->c = surface->format->BytesPerPixel;
+    image->next = NULL;
 
     size_t dataSize = GET_IMAGE_SIZE(image);
 
@@ -69,4 +70,12 @@ void freeImage(Image *image)
 {
     free(image->data);
     free(image);
+}
+
+void freeImages(Image *images, Image **prev, ssize_t count)
+{
+    Image *image = images;
+    for(; count != 0 && image != NULL; image = image->next, count -= count > 0)
+        freeImage(image);
+    *prev = image;
 }

@@ -9,17 +9,19 @@
 #define IM_HORIZONTAL 1
 #define IM_VERTICAL 2
 
-typedef struct
+typedef struct Image
 {
     size_t w;
     size_t h;
     int c;
     uint8_t *data;
+    struct Image *next;
 } Image;
 
 
 int init_image();
 Image *loadImage(char *path, bool flip);
 void freeImage(Image *image);
+void freeImages(Image *images, Image **prev, ssize_t count);
 
 #endif

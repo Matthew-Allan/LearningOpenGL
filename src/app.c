@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "app.h"
+#include "files.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -25,7 +26,7 @@
 #define CAT_STRINGS(a, b, dest) (strcat(strcat((dest), (a)), (b)))
 #define GET_ABS_PATH(name, relPath, appPath) char (name)[strlen(appPath) + strlen(relPath) + 1]; (name)[0] = '\0'; CAT_STRINGS(appPath, relPath, name)
 
-void getPath(char **out)
+char *getPath()
 {
     size_t pathlen = 5;
     ssize_t outputlen = pathlen;
@@ -38,10 +39,11 @@ void getPath(char **out)
             outputlen = pathlen;
         printf("nuts %s\n", test);
     }
-    *out = (char *)malloc(sizeof(char) * pathlen);
-    GET_PATH(*out, pathlen);
-    char *endOfDir = strrchr(*out, PATH_SEPERATOR) + 1;
+    char * path = (char *)malloc(sizeof(char) * pathlen);
+    GET_PATH(path, pathlen);
+    char *endOfDir = strrchr(path, PATH_SEPERATOR) + 1;
     *endOfDir = '\0';
+    return path;
 }
 
 App *setUpApp(SDL_Window *window)
@@ -58,57 +60,31 @@ App *setUpApp(SDL_Window *window)
 
     app->running = true;
     app->window = window;
-    getPath(&app->path);
+    app->images = NULL;
+    app->path = getPath();
 
     printf("App initialised\n");
 
     return app;
 }
 
+void closeAppWindow(App *app)
+{
+    if (app->window == NULL)
+        return;
+    SDL_DestroyWindow(app->window);
+    app->window = NULL;
+}
+
 int closeApp(App *app, int code)
 {
-    SDL_DestroyWindow(app->window);
+    closeAppWindow(app);
     free(app->path);
+    freeImages(app->images, &app->images, -1);
     free(app);
     SDL_Quit();
     printf("Goodbye!");
     return code;
-}
-
-size_t getFileSize(FILE *file_pointer)
-{
-    size_t size = 0;
-    long prev_pos = ftell(file_pointer);
-    for (char ch = fgetc(file_pointer); ch != EOF; ch = fgetc(file_pointer))
-        size++;
-    fseek(file_pointer, prev_pos, SEEK_SET);
-    return size;
-}
-
-void *readFile(char *filepath)
-{
-    FILE *file_pointer;
-    if ((file_pointer = fopen(filepath, "r")) == NULL)
-    {
-        printf("Failed to load \"%s\".", filepath);
-        return NULL;
-    }
-
-    size_t file_size = getFileSize(file_pointer);
-    void *contents = (char *)malloc(file_size + 1);
-    if (contents == NULL)
-    {
-        printf("Failed to load \"%s\". No space.", filepath);
-        fclose(file_pointer);
-        return NULL;
-    }
-
-    fread(contents, 1, file_size, file_pointer);
-    ((char *)contents)[file_size] = '\0';
-
-    fclose(file_pointer);
-
-    return contents;
 }
 
 void *readResource(char *relativePath, App *app)
@@ -120,5 +96,8 @@ void *readResource(char *relativePath, App *app)
 Image *readImageRsrc(char *relativePath, App *app, bool flipped)
 {
     GET_ABS_PATH(absolutePath, relativePath, app->path);
-    return loadImage(absolutePath, flipped);
+    Image * image = loadImage(absolutePath, flipped);
+    image->next = app->images;
+    app->images = image;
+    return image;
 }
