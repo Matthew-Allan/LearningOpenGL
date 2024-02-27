@@ -101,6 +101,8 @@ SDL_Window *setUpWindow()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
+    glPolygonMode(GL_FRONT_AND_BACK, POLYGON_MODE);
+
     resizeViewport(window);
 
     return window;
@@ -135,6 +137,53 @@ GLuint setUpShaderProgram(App *app)
     return shaderProgram;
 }
 
+int loadVAOWithTextures(VertexAttributeObject **out, App *app, GLuint shaderProgram)
+{
+    printf("Creating VAO\n");
+
+    float vertices[] = {
+        1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f};
+
+    GLuint indices[] = {
+        0, 1, 3,
+        1, 2, 3};
+    
+    VertexAttribute vertexAttributes[3];
+    vertexAttributes[0] = (VertexAttribute){0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0};
+    vertexAttributes[1] = (VertexAttribute){1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float))};
+    vertexAttributes[2] = (VertexAttribute){2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float))};
+
+    *out = createVAOStruct(createVAO(vertices, sizeof(vertices), indices, sizeof(indices), vertexAttributes, 3), 6);
+
+    Image *shipImage = readImageRsrc("img/Ship.png", app, true);
+    if(shipImage == NULL)
+        return 1;
+    addTexToVAO(*out, createTexture(shipImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture0", shaderProgram);
+    freeImage(shipImage);
+
+    Image *shieldImage = readImageRsrc("img/Shield.png", app, true);
+    if(shieldImage == NULL)
+        return 1;
+    addTexToVAO(*out, createTexture(shieldImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture1", shaderProgram);
+    freeImage(shieldImage);
+
+    Image *waterImage = readImageRsrc("img/water-normal.png", app, true);
+    if(waterImage == NULL)
+        return 1;
+    addTexToVAO(*out, createTexture(waterImage, GL_RGBA, GL_LINEAR, GL_REPEAT), "texture2", shaderProgram);
+    freeImage(waterImage);
+
+    Image *causticsImage = readImageRsrc("img/rt-caustics-grayscale.png", app, true);
+    if(causticsImage == NULL)
+        return 1;
+    addTexToVAO(*out, createTexture(causticsImage, GL_RGBA, GL_LINEAR, GL_REPEAT), "texture3", shaderProgram);
+    freeImage(causticsImage);
+    return 0;
+}
+
 void pollEvents(App *app)
 {
     SDL_Event e;
@@ -156,7 +205,7 @@ void pollEvents(App *app)
     }
 }
 
-void draw(App *app, GLuint shaderProgram, VertexAttributeObject *VAO, size_t VAOCount)
+void draw(App *app, GLuint shaderProgram, VertexAttributeObject **VAOs, size_t VAOCount)
 {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -168,13 +217,13 @@ void draw(App *app, GLuint shaderProgram, VertexAttributeObject *VAO, size_t VAO
 
     for (int i = 0; i < VAOCount; i++)
     {
-        for(int j = 0; j < VAO[i].textureCount; j++)
+        for(int j = 0; j < VAOs[i]->textureCount; j++)
         {
             glActiveTexture(GL_TEXTURE0 + j);
-            glBindTexture(GL_TEXTURE_2D, VAO[i].textures[j]);
+            glBindTexture(GL_TEXTURE_2D, VAOs[i]->textures[j]);
         }
-        glBindVertexArray(VAO[i].vao);
-        glDrawElements(GL_TRIANGLES, VAO[i].count, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(VAOs[i]->vao);
+        glDrawElements(GL_TRIANGLES, VAOs[i]->count, GL_UNSIGNED_INT, 0);
     }
 }
 
@@ -207,58 +256,15 @@ int main(int argc, char *argv[])
 
     // VAOs.
 
-    printf("Creating VAO\n");
+    GLuint VAOCount = 1;
+    VertexAttributeObject *VAOs[VAOCount];
 
-    VertexAttributeObject VAOs[1];
-
-    float vertices[] = {
-        1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f};
-
-    GLuint indices[] = {
-        0, 1, 3,
-        1, 2, 3};
-    
-    VertexAttribute vertexAttributes[3];
-    vertexAttributes[0] = (VertexAttribute){0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0};
-    vertexAttributes[1] = (VertexAttribute){1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float))};
-    vertexAttributes[2] = (VertexAttribute){2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float))};
-
-    VAOs[0] = (VertexAttributeObject){createVAO(vertices, sizeof(vertices), indices, sizeof(indices), vertexAttributes, 3), 6};
-
-    VAOs[0].textureCount = 0;
-
-    Image *image0 = readImageRsrc("img/Ship.png", app, true);
-    if(image0 == NULL)
+    if(loadVAOWithTextures(&VAOs[0], app, shaderProgram))
         return closeApp(app, 1);
-    addTexToVAO(&VAOs[0], createTexture(image0, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture0", shaderProgram);
-    freeImage(image0);
-
-    Image *image1 = readImageRsrc("img/Shield.png", app, true);
-    if(image1 == NULL)
-        return closeApp(app, 1);
-    addTexToVAO(&VAOs[0], createTexture(image1, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture1", shaderProgram);
-    freeImage(image1);
-
-    Image *image2 = readImageRsrc("img/water-normal.png", app, true);
-    if(image2 == NULL)
-        return closeApp(app, 1);
-    addTexToVAO(&VAOs[0], createTexture(image2, GL_RGBA, GL_LINEAR, GL_REPEAT), "texture2", shaderProgram);
-    freeImage(image2);
-
-    Image *image3 = readImageRsrc("img/rt-caustics-grayscale.png", app, true);
-    if(image3 == NULL)
-        return closeApp(app, 1);
-    addTexToVAO(&VAOs[0], createTexture(image3, GL_RGBA, GL_LINEAR, GL_REPEAT), "texture3", shaderProgram);
-    freeImage(image3);
-
-    VAOs[0].textureCount = 4;
-
-    glPolygonMode(GL_FRONT_AND_BACK, POLYGON_MODE);
 
     printf("Done!\n");
+
+    // Run gameloop.
 
     while (app->running)
     {
@@ -266,11 +272,16 @@ int main(int argc, char *argv[])
         pollEvents(app);
 
         // Draw to screen
-        draw(app, shaderProgram, VAOs, 1);
+        draw(app, shaderProgram, VAOs, VAOCount);
 
         // Flip buffers.
         SDL_GL_SwapWindow(app->window);
     }
+
+    // Close app.
+
+    for(int i = 0; i < VAOCount; i++)
+        free(VAOs[i]);
 
     return closeApp(app, 0);
 }
