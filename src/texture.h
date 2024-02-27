@@ -3,7 +3,8 @@
 
 #include <glad/glad.h>
 #include <stdlib.h>
+#include "image.h"
 
-GLuint createTexture(size_t width, size_t height, int colourMode, int filterMode, int edge, uint8_t *data);
+GLuint createTexture(Image *image, int colourMode, int filterMode, int edge);
 
 #endif

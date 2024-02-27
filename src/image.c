@@ -6,11 +6,13 @@
 #include <string.h>
 
 #include "image.h"
+#include <glad/glad.h>
 
 #define SUPPORTED_IMAGE_TYPES IMG_INIT_PNG
 #define GET_SIZE(width, height, channels) ((width) * (height) * (channels))
+#define GET_IMAGE_SIZE(image) ((image)->w * (image)->h * (image)->c)
 #define GET_ROW_OFFSET(y, width, channels) ((y) * (width) * (channels))
-#define GET_FL_ROW_OFFSET(y, width, height, channels) (((height) - (y) - 1) * (width) * (channels))
+#define GET_FL_ROW_OFFSET(y, width, height, channels) (((height) - (y)-1) * (width) * (channels))
 #define GET_COL_OFFSET(x, channels) ((x) * (channels))
 #define GET_OFFSET(x, y, width, channels) (GET_ROW_OFFSET(y, width, channels) + GET_COL_OFFSET(x, channels))
 
@@ -22,37 +24,49 @@ int init_image()
     return error;
 }
 
-uint8_t *loadImage(char *path, size_t *width, size_t *height, int *nrChannels, bool flipImage)
+void flipImage(Image *image)
+{
+    size_t dataSize = GET_IMAGE_SIZE(image);
+
+    uint8_t data[dataSize];
+
+    for (int i = 0; i < image->h; i++)
+        memcpy(data + GET_ROW_OFFSET(i, image->w, image->c), image->data + GET_FL_ROW_OFFSET(i, image->w, image->h, image->c), GET_SIZE(image->w, 1, image->c));
+
+    memcpy(image->data, data, dataSize);
+}
+
+Image *loadImage(char *path, bool flip)
 {
     // Load image at specified path
-    SDL_Surface *image = IMG_Load(path);
-    if (image == NULL)
+    SDL_Surface *surface = IMG_Load(path);
+    if (surface == NULL)
     {
         printf("Unable to load image %s! SDL_image Error: %s\n", path, IMG_GetError());
         return NULL;
     }
 
-    *nrChannels = image->format->BytesPerPixel;
-    *width = image->w;
-    *height = image->h;
+    Image *image = (Image *)malloc(sizeof(Image));
+    image->w = surface->w;
+    image->h = surface->h;
+    image->c = surface->format->BytesPerPixel;
 
-    size_t dataSize = *width * *height * *nrChannels;
+    size_t dataSize = GET_IMAGE_SIZE(image);
 
-    uint8_t *data = (uint8_t *)malloc(dataSize);
-    if(data == NULL)
-    {
-        printf("Unable to load image. Not enough space\n");
-        SDL_FreeSurface(image);
-        return NULL;
-    }
-    
-    if(!flipImage)
-        memcpy(data, image->pixels, dataSize);
-    else
-        for(int i = 0; i < *height; i++)
-            memcpy(data + GET_ROW_OFFSET(i, *width, *nrChannels), image->pixels + GET_FL_ROW_OFFSET(i, *width, *height, *nrChannels), GET_SIZE(*width, 1, *nrChannels));
+    image->data = (uint8_t *)malloc(dataSize);
 
-    SDL_FreeSurface(image);
+    memcpy(image->data, surface->pixels, dataSize);
 
-    return data;
+    SDL_FreeSurface(surface);
+
+    if (flip)
+        flipImage(image);
+
+    return image;
+}
+
+void freeImage(Image *image)
+{
+    free(image->data);
+    free(image);
 }

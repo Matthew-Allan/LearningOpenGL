@@ -48,3 +48,12 @@ GLuint createVAO(void *vertices, size_t verticesSize, GLuint indices[], size_t i
 
     return VAO;
 }
+
+void addTexToVAO(VertexAttributeObject *VAO, GLuint texture, char *uniformName, GLuint shaderProgram)
+{
+    VAO->textures[VAO->textureCount] = texture;
+    
+    glUseProgram(shaderProgram);
+    glUniform1i(glGetUniformLocation(shaderProgram, uniformName), VAO->textureCount);
+    VAO->textureCount++;
+}

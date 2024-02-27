@@ -1,6 +1,6 @@
 #include "texture.h"
 
-GLuint createTexture(size_t width, size_t height, int colourMode, int filterMode, int edge, uint8_t *data)
+GLuint createTexture(Image *image, int colourMode, int filterMode, int edge)
 {
     GLuint texture;
     glGenTextures(1, &texture);
@@ -11,7 +11,9 @@ GLuint createTexture(size_t width, size_t height, int colourMode, int filterMode
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterMode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterMode);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, colourMode, width, height, 0, colourMode, GL_UNSIGNED_BYTE, data);
+    int pixelFormat = (int[]){GL_RED, GL_RG, GL_RGB, GL_RGBA}[image->c - 1];
+
+    glTexImage2D(GL_TEXTURE_2D, 0, colourMode, image->w, image->h, 0, pixelFormat, GL_UNSIGNED_BYTE, image->data);
 
     return texture;
 }

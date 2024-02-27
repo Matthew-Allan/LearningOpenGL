@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "image.h"
 #include "app.h"
 
 #ifdef _WIN32
@@ -47,6 +46,8 @@ void getPath(char **out)
 
 App *setUpApp(SDL_Window *window)
 {
+    printf("Initialising App\n");
+    
     App *app = (App *)malloc(sizeof(App));
 
     if (app == NULL)
@@ -116,8 +117,8 @@ void *readResource(char *relativePath, App *app)
     return readFile(absolutePath);
 }
 
-uint8_t *readImageRsrc(char *relativePath, App *app, size_t *width, size_t *height, int *nrChannels)
+Image *readImageRsrc(char *relativePath, App *app, bool flipped)
 {
     GET_ABS_PATH(absolutePath, relativePath, app->path);
-    return loadImage(absolutePath, width, height, nrChannels, true);
+    return loadImage(absolutePath, flipped);
 }

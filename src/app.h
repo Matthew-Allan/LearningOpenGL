@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "image.h"
 
 typedef struct
 {
@@ -15,6 +16,6 @@ typedef struct
 App *setUpApp(SDL_Window *window);
 int closeApp(App *app, int code);
 void *readResource(char *relativePath, App *app);
-uint8_t *readImageRsrc(char *relativePath, App *app, size_t *width, size_t *height, int *nrChannels);
+Image *readImageRsrc(char *relativePath, App *app, bool flipped);
 
 #endif

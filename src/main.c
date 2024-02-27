@@ -106,6 +106,35 @@ SDL_Window *setUpWindow()
     return window;
 }
 
+GLuint setUpShaderProgram(App *app)
+{
+    printf("Loading shaders\n");
+    GLuint shaders[2];
+    size_t shaderCount = 2;
+
+    char *vsSource = readResource("shaders/vertex.glsl", app);
+    char *fsSource = readResource("shaders/fragment.glsl", app);
+
+    if(vsSource == NULL || fsSource == NULL)
+        return 0;
+
+    if ((shaders[0] = loadShader(vsSource, GL_VERTEX_SHADER)) == 0)
+        return 0;
+    if ((shaders[1] = loadShader(fsSource, GL_FRAGMENT_SHADER)) == 0)
+        return 0;
+
+    free(vsSource);
+    free(fsSource);
+
+    printf("Creating shader program\n");
+    GLuint shaderProgram = createProgram(shaders, shaderCount);
+
+    for (int i = 0; i < shaderCount; i++)
+        glDeleteShader(shaders[i]);
+
+    return shaderProgram;
+}
+
 void pollEvents(App *app)
 {
     SDL_Event e;
@@ -141,7 +170,7 @@ void draw(App *app, GLuint shaderProgram, VertexAttributeObject *VAO, size_t VAO
     {
         for(int j = 0; j < VAO[i].textureCount; j++)
         {
-            glActiveTexture(VAO[i].units[j]);
+            glActiveTexture(GL_TEXTURE0 + j);
             glBindTexture(GL_TEXTURE_2D, VAO[i].textures[j]);
         }
         glBindVertexArray(VAO[i].vao);
@@ -151,13 +180,16 @@ void draw(App *app, GLuint shaderProgram, VertexAttributeObject *VAO, size_t VAO
 
 int main(int argc, char *argv[])
 {
-    printf("Initialising SDL window\n");
+
+    // Set up window.
+
     SDL_Window *window;
 
     if ((window = setUpWindow()) == NULL)
         return 1;
 
-    printf("Initialising App\n");
+    // Set up app.
+
     App *app;
 
     if ((app = setUpApp(window)) == NULL)
@@ -166,34 +198,18 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    GLuint shaders[2];
-    size_t shaderCount = 2;
+    // Set up shader program
 
-    char *vsSource = readResource("shaders/vertex.glsl", app);
-    char *fsSource = readResource("shaders/fragment.glsl", app);
-
-    if(vsSource == NULL || fsSource == NULL)
-        return closeApp(app, 1);
-
-    if ((shaders[0] = loadShader(vsSource, GL_VERTEX_SHADER)) == 0)
-        return closeApp(app, 1);
-    if ((shaders[1] = loadShader(fsSource, GL_FRAGMENT_SHADER)) == 0)
-        return closeApp(app, 1);
-
-    free(vsSource);
-    free(fsSource);
-
-    printf("Creating shader program\n");
     GLuint shaderProgram;
-    if ((shaderProgram = createProgram(shaders, shaderCount)) == 0)
+
+    if((shaderProgram = setUpShaderProgram(app)) == 0)
         return closeApp(app, 1);
 
-    for (int i = 0; i < shaderCount; i++)
-        glDeleteShader(shaders[i]);
+    // VAOs.
+
+    printf("Creating VAO\n");
 
     VertexAttributeObject VAOs[1];
-
-    // VAO 0
 
     float vertices[] = {
         1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
@@ -204,73 +220,45 @@ int main(int argc, char *argv[])
     GLuint indices[] = {
         0, 1, 3,
         1, 2, 3};
-
+    
     VertexAttribute vertexAttributes[3];
     vertexAttributes[0] = (VertexAttribute){0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0};
     vertexAttributes[1] = (VertexAttribute){1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float))};
     vertexAttributes[2] = (VertexAttribute){2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float))};
 
-    printf("Creating VAO\n");
     VAOs[0] = (VertexAttributeObject){createVAO(vertices, sizeof(vertices), indices, sizeof(indices), vertexAttributes, 3), 6};
+
+    VAOs[0].textureCount = 0;
+
+    Image *image0 = readImageRsrc("img/Ship.png", app, true);
+    if(image0 == NULL)
+        return closeApp(app, 1);
+    addTexToVAO(&VAOs[0], createTexture(image0, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture0", shaderProgram);
+    freeImage(image0);
+
+    Image *image1 = readImageRsrc("img/Shield.png", app, true);
+    if(image1 == NULL)
+        return closeApp(app, 1);
+    addTexToVAO(&VAOs[0], createTexture(image1, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture1", shaderProgram);
+    freeImage(image1);
+
+    Image *image2 = readImageRsrc("img/water-normal.png", app, true);
+    if(image2 == NULL)
+        return closeApp(app, 1);
+    addTexToVAO(&VAOs[0], createTexture(image2, GL_RGBA, GL_LINEAR, GL_REPEAT), "texture2", shaderProgram);
+    freeImage(image2);
+
+    Image *image3 = readImageRsrc("img/rt-caustics-grayscale.png", app, true);
+    if(image3 == NULL)
+        return closeApp(app, 1);
+    addTexToVAO(&VAOs[0], createTexture(image3, GL_RGBA, GL_LINEAR, GL_REPEAT), "texture3", shaderProgram);
+    freeImage(image3);
+
+    VAOs[0].textureCount = 4;
 
     glPolygonMode(GL_FRONT_AND_BACK, POLYGON_MODE);
 
     printf("Done!\n");
-
-    int channels1;
-    size_t width1, height1;
-    uint8_t *data1 = readImageRsrc("img/Ship.png", app, &width1, &height1, &channels1);
-
-    if(data1 == NULL)
-        return closeApp(app, 1);
-
-    VAOs[0].textures[0] = createTexture(width1, height1, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE, data1);
-    VAOs[0].units[0] = GL_TEXTURE0;
-    free(data1);
-    
-    glUseProgram(shaderProgram);
-    glUniform1i(glGetUniformLocation(shaderProgram, "texture0"), 0);
-
-    int channels2;
-    size_t width2, height2;
-    uint8_t *data2 = readImageRsrc("img/Shield.png", app, &width2, &height2, &channels2);
-
-    if(data2 == NULL)
-        return closeApp(app, 1);
-
-    VAOs[0].textures[1] = createTexture(width2, height2, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE, data2);
-    VAOs[0].units[1] = GL_TEXTURE1;
-    free(data2);
-    
-    glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 1);
-
-    int channels3;
-    size_t width3, height3;
-    uint8_t *data3 = readImageRsrc("img/water-normal.png", app, &width3, &height3, &channels3);
-
-    if(data3 == NULL)
-        return closeApp(app, 1);
-
-    VAOs[0].textures[2] = createTexture(width3, height3, GL_RGB, GL_LINEAR, GL_REPEAT, data3);
-    VAOs[0].units[2] = GL_TEXTURE2;
-    free(data3);
-    
-    glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 2);
-
-    int channels4;
-    size_t width4, height4;
-    uint8_t *data4 = readImageRsrc("img/rt-caustics-grayscale.png", app, &width4, &height4, &channels4);
-
-    if(data4 == NULL)
-        return closeApp(app, 1);
-
-    VAOs[0].textures[3] = createTexture(width4, height4, GL_RGB, GL_LINEAR, GL_REPEAT, data4);
-    VAOs[0].units[3] = GL_TEXTURE3;
-    free(data4);
-    
-    glUniform1i(glGetUniformLocation(shaderProgram, "texture3"), 3);
-
-    VAOs[0].textureCount = 4;
 
     while (app->running)
     {
