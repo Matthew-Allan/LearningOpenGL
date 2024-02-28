@@ -7,8 +7,8 @@
 #include "shader.h"
 #include "app.h"
 #include "buffers.h"
-#include "image.h"
 #include "texture.h"
+#include "transforms.h"
 
 #define DEFAULT_SCREEN_WIDTH 640
 #define DEFAULT_SCREEN_HEIGHT 640
@@ -204,8 +204,14 @@ void draw(App *app, GLuint shaderProgram, VertexAttributeObject **VAOs, size_t V
 
     glUseProgram(shaderProgram);
     GLuint ticksPos = glGetUniformLocation(shaderProgram, "ticks");
+    GLuint rotationTransPos = glGetUniformLocation(shaderProgram, "rotationTrans");
     int ticks = SDL_GetTicks64();
     glUniform1i(ticksPos, ticks);
+    mat4 trans = identMat4;
+    multiply4(translationMat4(0.5f, -0.5f, 0.0f), (vec4*)&trans, (vec4*)&trans, 4);
+    rotate((vec4*)&trans, (vec4*)&trans, 4, ticks / 2000.0f, (vec3){1.0, 1.0, 1.0});
+    multiply4(scaleMat4(0.5, 0.5, 0.5, 1), (vec4*)&trans, (vec4*)&trans, 4);
+    glUniformMatrix4fv(rotationTransPos, 1, GL_FALSE, (GLfloat*)&trans);
 
     for (int i = 0; i < VAOCount; i++)
     {
