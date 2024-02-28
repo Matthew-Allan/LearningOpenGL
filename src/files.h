@@ -1,5 +1,5 @@
 #ifndef FILES_H
-#define FLIES_H
+#define FILES_H
 
 #include <stdio.h>
 
