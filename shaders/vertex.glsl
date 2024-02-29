@@ -20,5 +20,5 @@ void main()
 {
     gl_Position = projection * view * model * vec4(aPos, 1.0);
     TexCoord = aTexCoord;
-    vertexColor = aColor;
+    vertexColor = aPos + vec3(0.5, 0.5, 0.5);
 }

@@ -9,6 +9,7 @@
 #include "buffers.h"
 #include "texture.h"
 #include "transforms.h"
+#include "object.h"
 
 #define DEFAULT_SCREEN_WIDTH 800
 #define DEFAULT_SCREEN_HEIGHT 600
@@ -19,6 +20,8 @@
 #define GLAD_PROFILE_MASK SDL_GL_CONTEXT_PROFILE_CORE
 
 #define POLYGON_MODE GL_FILL
+
+#define CLEAR_COLOUR 0.2f, 0.3f, 0.3f, 1.0f
 
 #define VSYNC 1
 
@@ -100,6 +103,13 @@ SDL_Window *setUpWindow()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    
+    glClearColor(CLEAR_COLOUR);
+
+    glCullFace(GL_FRONT);
+
     glPolygonMode(GL_FRONT_AND_BACK, POLYGON_MODE);
 
     resizeViewport(window);
@@ -136,20 +146,20 @@ GLuint setUpShaderProgram(App *app)
     return shaderProgram;
 }
 
-int loadVAOWithTextures(VertexAttributeObject **out, App *app, GLuint shaderProgram)
+WorldObject *loadCubeWithTextures(App *app, GLuint shaderProgram, vec3 pos)
 {
-    printf("Creating VAO\n");
+    printf("Creating Object\n");
 
     float vertices[] = {
-        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // top right
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
         -0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,  // top left
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
+        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // top right
 
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
         -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
 
         0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
         0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
@@ -159,7 +169,17 @@ int loadVAOWithTextures(VertexAttributeObject **out, App *app, GLuint shaderProg
         0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
         0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f};
+        -0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        
+        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f};
 
     GLuint indices[] = {
         0, 1, 3,
@@ -169,14 +189,18 @@ int loadVAOWithTextures(VertexAttributeObject **out, App *app, GLuint shaderProg
         8, 9, 11,
         9, 10, 11,
         12, 13, 15,
-        13, 14, 15};
+        13, 14, 15,
+        16, 17, 19,
+        17, 18, 19,
+        20, 21, 23,
+        21, 22, 23};
 
     VertexAttribute vertexAttributes[3];
     vertexAttributes[0] = (VertexAttribute){0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0};
     vertexAttributes[1] = (VertexAttribute){1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float))};
     vertexAttributes[2] = (VertexAttribute){2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float))};
 
-    *out = createVAOStruct(createVAO(vertices, sizeof(vertices), indices, sizeof(indices), vertexAttributes, 3), 24);
+    WorldObject *cube = createWorldObject(createVAO(vertices, sizeof(vertices), indices + 0, sizeof(indices), vertexAttributes, 3), 36);
 
     Image *shipImage = readImageRsrc("img/Ship.png", app, true);
     Image *shieldImage = readImageRsrc("img/Shield.png", app, true);
@@ -184,16 +208,18 @@ int loadVAOWithTextures(VertexAttributeObject **out, App *app, GLuint shaderProg
     Image *causticsImage = readImageRsrc("img/rt-caustics-grayscale.png", app, true);
 
     if (shipImage == NULL || shieldImage == NULL || waterImage == NULL || causticsImage == NULL)
-        return 1;
+        return NULL;
 
-    addTexToVAO(*out, createTexture(shipImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture0", shaderProgram);
-    addTexToVAO(*out, createTexture(shieldImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture1", shaderProgram);
-    addTexToVAO(*out, createTexture(waterImage, GL_RGB, GL_LINEAR, GL_REPEAT), "texture2", shaderProgram);
-    addTexToVAO(*out, createTexture(causticsImage, GL_RGB, GL_LINEAR, GL_REPEAT), "texture3", shaderProgram);
+    addTexToWorldObject(cube, createTexture(shipImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture0", shaderProgram);
+    addTexToWorldObject(cube, createTexture(shieldImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture1", shaderProgram);
+    addTexToWorldObject(cube, createTexture(waterImage, GL_RGB, GL_LINEAR, GL_REPEAT), "texture2", shaderProgram);
+    addTexToWorldObject(cube, createTexture(causticsImage, GL_RGB, GL_LINEAR, GL_REPEAT), "texture3", shaderProgram);
 
     freeImages(app->images, &app->images, 4);
 
-    return 0;
+    cube->pos = pos;
+
+    return cube;
 }
 
 void pollEvents(App *app)
@@ -218,10 +244,9 @@ void pollEvents(App *app)
     }
 }
 
-void draw(App *app, GLuint shaderProgram, VertexAttributeObject **VAOs, size_t VAOCount)
+void draw(App *app, GLuint shaderProgram, WorldObject **objects, size_t objectCount)
 {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
 
@@ -229,31 +254,33 @@ void draw(App *app, GLuint shaderProgram, VertexAttributeObject **VAOs, size_t V
     int ticks = SDL_GetTicks64();
     glUniform1i(ticksPos, ticks);
 
-    mat4 model = identMat4;
-    mat4 projection;
-    mat4 view = translationMat4(0, 0, -3.0);
-
-    genRotationMatrix(&model, rad(-55.0f), vec3(1, 0, 0));
-    rotate((vec4 *)&model, (vec4 *)&model, 4, ticks / 4000.0f, vec3(0.5f, 1.0f, 0.0f));
-    perspective(&projection, rad(45), (float)app->w / (float)app->h, 0.1f, 100.0f);
-
-    GLuint modelPos = glGetUniformLocation(shaderProgram, "model");
-    GLuint viewPos = glGetUniformLocation(shaderProgram, "view");
-    GLuint projectionPos = glGetUniformLocation(shaderProgram, "projection");
-
-    glUniformMatrix4fv(modelPos, 1, GL_FALSE, vecPos(model));
-    glUniformMatrix4fv(viewPos, 1, GL_FALSE, vecPos(view));
-    glUniformMatrix4fv(projectionPos, 1, GL_FALSE, vecPos(projection));
-
-    for (int i = 0; i < VAOCount; i++)
+    for (int i = 0; i < objectCount; i++)
     {
-        for (int j = 0; j < VAOs[i]->textureCount; j++)
+        for (int j = 0; j < objects[i]->textureCount; j++)
         {
             glActiveTexture(GL_TEXTURE0 + j);
-            glBindTexture(GL_TEXTURE_2D, VAOs[i]->textures[j]);
+            glBindTexture(GL_TEXTURE_2D, objects[i]->textures[j]);
         }
-        glBindVertexArray(VAOs[i]->vao);
-        glDrawElements(GL_TRIANGLES, VAOs[i]->count, GL_UNSIGNED_INT, 0);
+
+        mat4 model = identMat4;
+        mat4 projection;
+        mat4 view = translationMat4(0, 0, -3.0);
+
+        genRotationMatrix(&model, rad(-55.0f), vec3(1, 0, 0));
+        rotate((vec4 *)&model, (vec4 *)&model, 4, ticks / 4000.0f, vec3(0.5f, 1.0f, 0.0f));
+        translate((vec4*)&model, (vec4*)&model, 4, objects[i]->pos);
+        perspective(&projection, rad(45), (float)app->w / (float)app->h, 0.1f, 100.0f);
+
+        GLuint modelPos = glGetUniformLocation(shaderProgram, "model");
+        GLuint viewPos = glGetUniformLocation(shaderProgram, "view");
+        GLuint projectionPos = glGetUniformLocation(shaderProgram, "projection");
+
+        glUniformMatrix4fv(modelPos, 1, GL_FALSE, vecPos(model));
+        glUniformMatrix4fv(viewPos, 1, GL_FALSE, vecPos(view));
+        glUniformMatrix4fv(projectionPos, 1, GL_FALSE, vecPos(projection));
+
+        glBindVertexArray(objects[i]->vao);
+        glDrawElements(GL_TRIANGLES, objects[i]->vertexCount, GL_UNSIGNED_INT, 0);
     }
 }
 
@@ -281,12 +308,30 @@ int main(int argc, char *argv[])
     if (shaderProgram == 0)
         return closeApp(app, 1);
 
-    // VAOs.
+    // Objects.
 
-    GLuint VAOCount = 1;
-    VertexAttributeObject *VAOs[VAOCount];
+    GLuint objectCount = 10;
+    WorldObject *objects[objectCount];
 
-    if (loadVAOWithTextures(&VAOs[0], app, shaderProgram))
+    if ((objects[0] = loadCubeWithTextures(app, shaderProgram, vec3(0, 0, 0))) == NULL)
+        return closeApp(app, 1);
+    if ((objects[1] = loadCubeWithTextures(app, shaderProgram, vec3(2, 5, -15))) == NULL)
+        return closeApp(app, 1);
+    if ((objects[2] = loadCubeWithTextures(app, shaderProgram, vec3(-1.5, -2.2, -2.5))) == NULL)
+        return closeApp(app, 1);
+    if ((objects[3] = loadCubeWithTextures(app, shaderProgram, vec3(-3.8f, -2.0f, -12.3f))) == NULL)
+        return closeApp(app, 1);
+    if ((objects[4] = loadCubeWithTextures(app, shaderProgram, vec3(2.4f, -0.4f, -3.5f))) == NULL)
+        return closeApp(app, 1);
+    if ((objects[5] = loadCubeWithTextures(app, shaderProgram, vec3(-1.7f,  3.0f, -7.5f))) == NULL)
+        return closeApp(app, 1);
+    if ((objects[6] = loadCubeWithTextures(app, shaderProgram, vec3(1.3f, -2.0f, -2.5f))) == NULL)
+        return closeApp(app, 1);
+    if ((objects[7] = loadCubeWithTextures(app, shaderProgram, vec3(1.5f,  2.0f, -2.5f))) == NULL)
+        return closeApp(app, 1);
+    if ((objects[8] = loadCubeWithTextures(app, shaderProgram, vec3(1.5f,  0.2f, -1.5f))) == NULL)
+        return closeApp(app, 1);
+    if ((objects[9] = loadCubeWithTextures(app, shaderProgram, vec3(-1.3f,  1.0f, -1.5f))) == NULL)
         return closeApp(app, 1);
 
     printf("Done!\n");
@@ -299,7 +344,7 @@ int main(int argc, char *argv[])
         pollEvents(app);
 
         // Draw to screen
-        draw(app, shaderProgram, VAOs, VAOCount);
+        draw(app, shaderProgram, objects, objectCount);
 
         // Flip buffers.
         SDL_GL_SwapWindow(app->window);
@@ -307,8 +352,8 @@ int main(int argc, char *argv[])
 
     // Close app.
 
-    for (int i = 0; i < VAOCount; i++)
-        free(VAOs[i]);
+    for (int i = 0; i < objectCount; i++)
+        free(objects[i]);
 
     return closeApp(app, 0);
 }

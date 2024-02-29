@@ -29,8 +29,9 @@ vec4 getBright(vec2 coord)
 vec4 getImage(vec2 coord)
 {
     vec4 forground = texture(texture0, vec2(coord.x, 1 - coord.y));
-    vec4 background = vec4(1, 1, 1, texture(texture1, coord).a);
-    vec4 image = (forground * (1.0 - background.a)) + (background * vec4(vertexColor + vec3(0.5, 0.5, 0.5), 1.0) * background.a);
+    vec4 background = texture(texture1, coord);
+    vec4 image = (forground * (1.0 - background.a)) + (background * background.a);
+    image = vec4(vertexColor,  1.0) * (1.0 - image.a) + (image * image.a);
     return image * getBright(coord);
 }
 
