@@ -190,6 +190,7 @@ void pollEvents(App *app)
         case SDL_WINDOWEVENT:
             if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 resizeViewport(app->window);
+                updateDimentions(app);
             break;
         default:
             break;
@@ -203,14 +204,14 @@ void draw(App *app, GLuint shaderProgram, VertexAttributeObject **VAOs, size_t V
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shaderProgram);
+
     GLuint ticksPos = glGetUniformLocation(shaderProgram, "ticks");
-    GLuint rotationTransPos = glGetUniformLocation(shaderProgram, "rotationTrans");
     int ticks = SDL_GetTicks64();
     glUniform1i(ticksPos, ticks);
-    mat4 trans = identMat4;
-    multiply4(translationMat4(0.5f, -0.5f, 0.0f), (vec4*)&trans, (vec4*)&trans, 4);
-    rotate((vec4*)&trans, (vec4*)&trans, 4, ticks / 2000.0f, (vec3){1.0, 1.0, 1.0});
-    multiply4(scaleMat4(0.5, 0.5, 0.5, 1), (vec4*)&trans, (vec4*)&trans, 4);
+
+    GLuint rotationTransPos = glGetUniformLocation(shaderProgram, "rotationTrans");
+    mat4 trans = mat4ID(1);
+    perspective(&trans, rad(45), (float)app->w / (float)app->h, 0.1f, 100.0f);
     glUniformMatrix4fv(rotationTransPos, 1, GL_FALSE, (GLfloat*)&trans);
 
     for (int i = 0; i < VAOCount; i++)

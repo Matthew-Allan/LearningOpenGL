@@ -62,6 +62,8 @@ App *setUpApp(SDL_Window *window)
     app->images = NULL;
     app->path = getPath();
 
+    updateDimentions(app);
+
     printf("App initialised\n");
 
     return app;
@@ -99,4 +101,9 @@ Image *readImageRsrc(char *relativePath, App *app, bool flipped)
     image->next = app->images;
     app->images = image;
     return image;
+}
+
+void updateDimentions(App *app)
+{
+    SDL_GL_GetDrawableSize(app->window, &app->w, &app->h);
 }
