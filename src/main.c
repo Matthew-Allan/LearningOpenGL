@@ -86,7 +86,7 @@ SDL_Window *setUpWindow()
         SDL_Quit();
         return NULL;
     }
-    
+
     printf("GL Version: %s\n", glGetString(GL_VERSION));
 
     if (SDL_GL_SetSwapInterval(VSYNC) != 0)
@@ -97,7 +97,6 @@ SDL_Window *setUpWindow()
         return NULL;
     }
 
-    
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
 
@@ -117,7 +116,7 @@ GLuint setUpShaderProgram(App *app)
     char *vsSource = readResource("shaders/vertex.glsl", app);
     char *fsSource = readResource("shaders/fragment.glsl", app);
 
-    if(vsSource == NULL || fsSource == NULL)
+    if (vsSource == NULL || fsSource == NULL)
         return 0;
 
     if ((shaders[0] = loadShader(vsSource, GL_VERTEX_SHADER)) == 0)
@@ -142,28 +141,49 @@ int loadVAOWithTextures(VertexAttributeObject **out, App *app, GLuint shaderProg
     printf("Creating VAO\n");
 
     float vertices[] = {
-        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f};
+        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // top right
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+        -0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,  // top left
+
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f};
 
     GLuint indices[] = {
         0, 1, 3,
-        1, 2, 3};
-    
+        1, 2, 3,
+        4, 5, 7,
+        5, 6, 7,
+        8, 9, 11,
+        9, 10, 11,
+        12, 13, 15,
+        13, 14, 15};
+
     VertexAttribute vertexAttributes[3];
     vertexAttributes[0] = (VertexAttribute){0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0};
     vertexAttributes[1] = (VertexAttribute){1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float))};
     vertexAttributes[2] = (VertexAttribute){2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float))};
 
-    *out = createVAOStruct(createVAO(vertices, sizeof(vertices), indices, sizeof(indices), vertexAttributes, 3), 6);
+    *out = createVAOStruct(createVAO(vertices, sizeof(vertices), indices, sizeof(indices), vertexAttributes, 3), 24);
 
     Image *shipImage = readImageRsrc("img/Ship.png", app, true);
     Image *shieldImage = readImageRsrc("img/Shield.png", app, true);
     Image *waterImage = readImageRsrc("img/water-normal.png", app, true);
     Image *causticsImage = readImageRsrc("img/rt-caustics-grayscale.png", app, true);
-    
-    if(shipImage == NULL || shieldImage == NULL || waterImage == NULL || causticsImage == NULL)
+
+    if (shipImage == NULL || shieldImage == NULL || waterImage == NULL || causticsImage == NULL)
         return 1;
 
     addTexToVAO(*out, createTexture(shipImage, GL_RGBA, GL_NEAREST, GL_CLAMP_TO_EDGE), "texture0", shaderProgram);
@@ -172,7 +192,7 @@ int loadVAOWithTextures(VertexAttributeObject **out, App *app, GLuint shaderProg
     addTexToVAO(*out, createTexture(causticsImage, GL_RGB, GL_LINEAR, GL_REPEAT), "texture3", shaderProgram);
 
     freeImages(app->images, &app->images, 4);
-    
+
     return 0;
 }
 
@@ -190,7 +210,7 @@ void pollEvents(App *app)
         case SDL_WINDOWEVENT:
             if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 resizeViewport(app->window);
-                updateDimentions(app);
+            updateDimentions(app);
             break;
         default:
             break;
@@ -209,17 +229,17 @@ void draw(App *app, GLuint shaderProgram, VertexAttributeObject **VAOs, size_t V
     int ticks = SDL_GetTicks64();
     glUniform1i(ticksPos, ticks);
 
+    mat4 model = identMat4;
+    mat4 projection;
+    mat4 view = translationMat4(0, 0, -3.0);
+
+    genRotationMatrix(&model, rad(-55.0f), vec3(1, 0, 0));
+    rotate((vec4 *)&model, (vec4 *)&model, 4, ticks / 4000.0f, vec3(0.5f, 1.0f, 0.0f));
+    perspective(&projection, rad(45), (float)app->w / (float)app->h, 0.1f, 100.0f);
+
     GLuint modelPos = glGetUniformLocation(shaderProgram, "model");
     GLuint viewPos = glGetUniformLocation(shaderProgram, "view");
     GLuint projectionPos = glGetUniformLocation(shaderProgram, "projection");
-
-    mat4 model = identMat4;
-    genRotationMatrix(&model, rad(-55.0f), vec3(1, 0, 0));
-
-    mat4 view = translationMat4(0, 0, -3.0);
-
-    mat4 projection;
-    perspective(&projection, rad(45), (float)app->w / (float)app->h, 0.1f, 100.0f);
 
     glUniformMatrix4fv(modelPos, 1, GL_FALSE, vecPos(model));
     glUniformMatrix4fv(viewPos, 1, GL_FALSE, vecPos(view));
@@ -227,7 +247,7 @@ void draw(App *app, GLuint shaderProgram, VertexAttributeObject **VAOs, size_t V
 
     for (int i = 0; i < VAOCount; i++)
     {
-        for(int j = 0; j < VAOs[i]->textureCount; j++)
+        for (int j = 0; j < VAOs[i]->textureCount; j++)
         {
             glActiveTexture(GL_TEXTURE0 + j);
             glBindTexture(GL_TEXTURE_2D, VAOs[i]->textures[j]);
@@ -258,7 +278,7 @@ int main(int argc, char *argv[])
     // Set up shader program
 
     GLuint shaderProgram = setUpShaderProgram(app);
-    if(shaderProgram == 0)
+    if (shaderProgram == 0)
         return closeApp(app, 1);
 
     // VAOs.
@@ -266,7 +286,7 @@ int main(int argc, char *argv[])
     GLuint VAOCount = 1;
     VertexAttributeObject *VAOs[VAOCount];
 
-    if(loadVAOWithTextures(&VAOs[0], app, shaderProgram))
+    if (loadVAOWithTextures(&VAOs[0], app, shaderProgram))
         return closeApp(app, 1);
 
     printf("Done!\n");
@@ -287,7 +307,7 @@ int main(int argc, char *argv[])
 
     // Close app.
 
-    for(int i = 0; i < VAOCount; i++)
+    for (int i = 0; i < VAOCount; i++)
         free(VAOs[i]);
 
     return closeApp(app, 0);
