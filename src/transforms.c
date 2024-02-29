@@ -128,6 +128,16 @@ void rotate(vec4 *in, vec4 *out, size_t size, float angle, vec3 axis)
     multiply4(rotationMatrix, in, out, size);
 }
 
+void translate(vec4 *in, vec4 *out, size_t size, vec3 trans)
+{
+    multiply4(translationMat4(trans.x, trans.y, trans.z), in, out, size);
+}
+
+void scale(vec4 *in, vec4 *out, size_t size, vec3 scale)
+{
+    multiply4(scaleMat4(scale.x, scale.y, scale.z, 1), in, out, size);
+}
+
 void orthographic(mat4 *out, float left, float right, float bottom, float top, float near, float far)
 {
     out->i = vec4(2.0f / (right - left), 0, 0, 0);
@@ -138,7 +148,7 @@ void orthographic(mat4 *out, float left, float right, float bottom, float top, f
 
 void perspective(mat4 *out, float fov, float aspect, float near, float far)
 {
-    float f = cos(fov / 2) * sin(fov / 2);
+    float f = cos(fov / 2) / sin(fov / 2);
     out->i = vec4(f / aspect, 0, 0, 0);
     out->j = vec4(0, f, 0, 0);
     out->k = vec4(0, 0, (far + near) / (near - far), -1);

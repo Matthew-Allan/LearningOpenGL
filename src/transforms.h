@@ -67,6 +67,7 @@ typedef struct
 #define translationMat4(x, y, z) (mat4(vec4(1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, 1, 0), vec4(x, y, z, 1)))
 
 #define rad(deg) ((deg) * M_PI / 180)
+#define vecPos(item) ((GLfloat*)&item)
 
 float mag2sqr(vec2 vector);
 float mag3sqr(vec3 vector);
@@ -93,6 +94,10 @@ void multiply4(mat4 inA, vec4 *inB, vec4 *out, size_t size);
 void genRotationMatrix(mat4 *out, float angle, vec3 axis);
 
 void rotate(vec4 *in, vec4 *out, size_t size, float angle, vec3 axis);
+
+void translate(vec4 *in, vec4 *out, size_t size, vec3 trans);
+
+void scale(vec4 *in, vec4 *out, size_t size, vec3 scale);
 
 void orthographic(mat4 *out, float left, float right, float bottom, float top, float near, float far);
 

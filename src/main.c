@@ -10,8 +10,8 @@
 #include "texture.h"
 #include "transforms.h"
 
-#define DEFAULT_SCREEN_WIDTH 640
-#define DEFAULT_SCREEN_HEIGHT 640
+#define DEFAULT_SCREEN_WIDTH 800
+#define DEFAULT_SCREEN_HEIGHT 600
 #define SCREEN_FLAGS SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
 
 #define GLAD_MAJOR_VERSION 4
@@ -142,10 +142,10 @@ int loadVAOWithTextures(VertexAttributeObject **out, App *app, GLuint shaderProg
     printf("Creating VAO\n");
 
     float vertices[] = {
-        1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        1.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
-        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f};
+        0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f,  0.0f, 1.0f};
 
     GLuint indices[] = {
         0, 1, 3,
@@ -209,10 +209,21 @@ void draw(App *app, GLuint shaderProgram, VertexAttributeObject **VAOs, size_t V
     int ticks = SDL_GetTicks64();
     glUniform1i(ticksPos, ticks);
 
-    GLuint rotationTransPos = glGetUniformLocation(shaderProgram, "rotationTrans");
-    mat4 trans = mat4ID(1);
-    perspective(&trans, rad(45), (float)app->w / (float)app->h, 0.1f, 100.0f);
-    glUniformMatrix4fv(rotationTransPos, 1, GL_FALSE, (GLfloat*)&trans);
+    GLuint modelPos = glGetUniformLocation(shaderProgram, "model");
+    GLuint viewPos = glGetUniformLocation(shaderProgram, "view");
+    GLuint projectionPos = glGetUniformLocation(shaderProgram, "projection");
+
+    mat4 model = identMat4;
+    genRotationMatrix(&model, rad(-55.0f), vec3(1, 0, 0));
+
+    mat4 view = translationMat4(0, 0, -3.0);
+
+    mat4 projection;
+    perspective(&projection, rad(45), (float)app->w / (float)app->h, 0.1f, 100.0f);
+
+    glUniformMatrix4fv(modelPos, 1, GL_FALSE, vecPos(model));
+    glUniformMatrix4fv(viewPos, 1, GL_FALSE, vecPos(view));
+    glUniformMatrix4fv(projectionPos, 1, GL_FALSE, vecPos(projection));
 
     for (int i = 0; i < VAOCount; i++)
     {
