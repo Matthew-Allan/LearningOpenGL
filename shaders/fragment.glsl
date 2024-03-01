@@ -32,7 +32,7 @@ vec4 getImage(vec2 coord)
     vec4 background = texture(texture1, coord);
     vec4 image = (forground * (1.0 - background.a)) + (background * background.a);
     image = vec4(vertexColor,  1.0) * (1.0 - image.a) + (image * image.a);
-    return image * getBright(coord);
+    return image;// * getBright(coord);
 }
 
 void main()

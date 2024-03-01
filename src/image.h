@@ -21,7 +21,7 @@ typedef struct Image
 
 int init_image();
 Image *loadImage(char *path, bool flip);
-void freeImage(Image *image);
+Image *freeImage(Image *image);
 void freeImages(Image *images, Image **prev, ssize_t count);
 
 #endif

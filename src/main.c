@@ -105,7 +105,7 @@ SDL_Window *setUpWindow()
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    
+
     glClearColor(CLEAR_COLOUR);
 
     glCullFace(GL_FRONT);
@@ -151,10 +151,10 @@ WorldObject *loadCubeWithTextures(App *app, GLuint shaderProgram, vec3 pos)
     printf("Creating Object\n");
 
     float vertices[] = {
-        -0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,  // top left
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
-        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,   // top right
+        -0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
 
         -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
         -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
@@ -170,12 +170,12 @@ WorldObject *loadCubeWithTextures(App *app, GLuint shaderProgram, vec3 pos)
         0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
         -0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-        
+
         0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
         0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
         0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
         0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-        
+
         -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
         -0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
@@ -268,8 +268,9 @@ void draw(App *app, GLuint shaderProgram, WorldObject **objects, size_t objectCo
 
         genRotationMatrix(&model, rad(-55.0f), vec3(1, 0, 0));
         rotate((vec4 *)&model, (vec4 *)&model, 4, ticks / 4000.0f, vec3(0.5f, 1.0f, 0.0f));
-        translate((vec4*)&model, (vec4*)&model, 4, objects[i]->pos);
+        translate((vec4 *)&model, (vec4 *)&model, 4, objects[i]->pos);
         perspective(&projection, rad(45), (float)app->w / (float)app->h, 0.1f, 100.0f);
+        //orthographic(&projection, -6, 6, -6, 6, 0.1, 100);
 
         GLuint modelPos = glGetUniformLocation(shaderProgram, "model");
         GLuint viewPos = glGetUniformLocation(shaderProgram, "view");
@@ -323,15 +324,15 @@ int main(int argc, char *argv[])
         return closeApp(app, 1);
     if ((objects[4] = loadCubeWithTextures(app, shaderProgram, vec3(2.4f, -0.4f, -3.5f))) == NULL)
         return closeApp(app, 1);
-    if ((objects[5] = loadCubeWithTextures(app, shaderProgram, vec3(-1.7f,  3.0f, -7.5f))) == NULL)
+    if ((objects[5] = loadCubeWithTextures(app, shaderProgram, vec3(-1.7f, 3.0f, -7.5f))) == NULL)
         return closeApp(app, 1);
     if ((objects[6] = loadCubeWithTextures(app, shaderProgram, vec3(1.3f, -2.0f, -2.5f))) == NULL)
         return closeApp(app, 1);
-    if ((objects[7] = loadCubeWithTextures(app, shaderProgram, vec3(1.5f,  2.0f, -2.5f))) == NULL)
+    if ((objects[7] = loadCubeWithTextures(app, shaderProgram, vec3(1.5f, 2.0f, -2.5f))) == NULL)
         return closeApp(app, 1);
-    if ((objects[8] = loadCubeWithTextures(app, shaderProgram, vec3(1.5f,  0.2f, -1.5f))) == NULL)
+    if ((objects[8] = loadCubeWithTextures(app, shaderProgram, vec3(1.5f, 0.2f, -1.5f))) == NULL)
         return closeApp(app, 1);
-    if ((objects[9] = loadCubeWithTextures(app, shaderProgram, vec3(-1.3f,  1.0f, -1.5f))) == NULL)
+    if ((objects[9] = loadCubeWithTextures(app, shaderProgram, vec3(-1.3f, 1.0f, -1.5f))) == NULL)
         return closeApp(app, 1);
 
     printf("Done!\n");

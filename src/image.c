@@ -66,16 +66,18 @@ Image *loadImage(char *path, bool flip)
     return image;
 }
 
-void freeImage(Image *image)
+Image *freeImage(Image *image)
 {
+    Image *next = image->next;
     free(image->data);
     free(image);
+    return next;
 }
 
 void freeImages(Image *images, Image **prev, ssize_t count)
 {
     Image *image = images;
-    for(; count != 0 && image != NULL; image = image->next, count -= count > 0)
-        freeImage(image);
+    for(; count != 0 && image != NULL; count -= count > 0)
+        image = freeImage(image);
     *prev = image;
 }
