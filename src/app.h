@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include "image.h"
 
+#define RATIO(app) ((float)((App*)(app))->w / (float)((App*)(app))->h)
+
 typedef struct
 {
     bool running;

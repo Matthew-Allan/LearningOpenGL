@@ -107,6 +107,66 @@ void multiply4(mat4 inA, vec4 *inB, vec4 *out, size_t size)
     }
 }
 
+void add2(vec2 *inA, vec2 *inB, vec2 *out, size_t size)
+{
+    for(size_t i = 0; i < size; i++)
+    {
+        out[i].x = inA->x + inB->x;
+        out[i].y = inA->y + inB->y;
+    }
+}
+
+void add3(vec3 *inA, vec3 *inB, vec3 *out, size_t size)
+{
+    for(size_t i = 0; i < size; i++)
+    {
+        out[i].x = inA->x + inB->x;
+        out[i].y = inA->y + inB->y;
+        out[i].z = inA->z + inB->z;
+    }
+}
+
+void add4(vec4 *inA, vec4 *inB, vec4 *out, size_t size)
+{
+    for(size_t i = 0; i < size; i++)
+    {
+        out[i].x = inA->x + inB->x;
+        out[i].y = inA->y + inB->y;
+        out[i].z = inA->z + inB->z;
+        out[i].w = inA->w + inB->w;
+    }
+}
+
+void sub2(vec2 *inA, vec2 *inB, vec2 *out, size_t size)
+{
+    for(size_t i = 0; i < size; i++)
+    {
+        out[i].x = inA->x - inB->x;
+        out[i].y = inA->y - inB->y;
+    }
+}
+
+void sub3(vec3 *inA, vec3 *inB, vec3 *out, size_t size)
+{
+    for(size_t i = 0; i < size; i++)
+    {
+        out[i].x = inA->x - inB->x;
+        out[i].y = inA->y - inB->y;
+        out[i].z = inA->z - inB->z;
+    }
+}
+
+void sub4(vec4 *inA, vec4 *inB, vec4 *out, size_t size)
+{
+    for(size_t i = 0; i < size; i++)
+    {
+        out[i].x = inA->x - inB->x;
+        out[i].y = inA->y - inB->y;
+        out[i].z = inA->z - inB->z;
+        out[i].w = inA->w - inB->w;
+    }
+}
+
 void genRotationMatrix(mat4 *out, float angle, vec3 axis)
 {
     float sinval = sinf(angle);

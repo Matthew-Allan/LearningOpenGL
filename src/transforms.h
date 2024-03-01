@@ -67,7 +67,9 @@ typedef struct
 #define translationMat3(x, y) (mat3(vec3(1, 0, 0), vec3(0, 1, 0), vec3(x, y, 1)))
 #define translationMat4(x, y, z) (mat4(vec4(1, 0, 0, 0), vec4(0, 1, 0, 0), vec4(0, 0, 1, 0), vec4(x, y, z, 1)))
 
-#define rad(deg) ((deg) * M_PI / 180)
+#define PI 3.14159265358979323846264338327950288
+
+#define rad(deg) ((deg) * PI / 180)
 #define vecPos(item) ((GLfloat*)&item)
 
 float mag2sqr(vec2 vector);
@@ -91,6 +93,14 @@ float dot4(vec4 inA, vec4 inB);
 void multiply2(mat2 inA, vec2 *inB, vec2 *out, size_t size);
 void multiply3(mat3 inA, vec3 *inB, vec3 *out, size_t size);
 void multiply4(mat4 inA, vec4 *inB, vec4 *out, size_t size);
+
+void add2(vec2 *inA, vec2 *inB, vec2 *out, size_t size);
+void add3(vec3 *inA, vec3 *inB, vec3 *out, size_t size);
+void add4(vec4 *inA, vec4 *inB, vec4 *out, size_t size);
+
+void sub2(vec2 *inA, vec2 *inB, vec2 *out, size_t size);
+void sub3(vec3 *inA, vec3 *inB, vec3 *out, size_t size);
+void sub4(vec4 *inA, vec4 *inB, vec4 *out, size_t size);
 
 void genRotationMatrix(mat4 *out, float angle, vec3 axis);
 

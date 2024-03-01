@@ -12,7 +12,7 @@
 #include "object.h"
 
 #define DEFAULT_SCREEN_WIDTH 800
-#define DEFAULT_SCREEN_HEIGHT 600
+#define DEFAULT_SCREEN_HEIGHT 800
 #define SCREEN_FLAGS SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
 
 #define GLAD_MAJOR_VERSION 4
@@ -263,14 +263,14 @@ void draw(App *app, GLuint shaderProgram, WorldObject **objects, size_t objectCo
         }
 
         mat4 model = identMat4;
-        mat4 projection;
+        mat4 projection = identMat4;
         mat4 view = translationMat4(0, 0, -3.0);
 
         genRotationMatrix(&model, rad(-55.0f), vec3(1, 0, 0));
         rotate((vec4 *)&model, (vec4 *)&model, 4, ticks / 4000.0f, vec3(0.5f, 1.0f, 0.0f));
         translate((vec4 *)&model, (vec4 *)&model, 4, objects[i]->pos);
         perspective(&projection, rad(45), (float)app->w / (float)app->h, 0.1f, 100.0f);
-        //orthographic(&projection, -6, 6, -6, 6, 0.1, 100);
+        //orthographic(&projection, -ASPECT_RATIO(app) * 6, ASPECT_RATIO(app) * 6, -6, 6, 0.1, 100);
 
         GLuint modelPos = glGetUniformLocation(shaderProgram, "model");
         GLuint viewPos = glGetUniformLocation(shaderProgram, "view");
