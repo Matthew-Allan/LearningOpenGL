@@ -95,9 +95,9 @@ SDL_Window *setUpWindow()
     if (SDL_GL_SetSwapInterval(VSYNC) != 0)
     {
         printf("Could not enable vsync. Error: %s\n", SDL_GetError());
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return NULL;
+        //SDL_DestroyWindow(window);
+        //SDL_Quit();
+        //return NULL;
     }
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

@@ -1,7 +1,7 @@
 srcdir := "$(dir $(abspath $(lastword $(MAKEFILE_LIST))))"
 files := main shader app buffers image texture files transforms object glad/glad 
 outputnm := main
-unixLibs := SDL2 SDL2_image
+unixLibs := SDL2 SDL2_image m
 windowsLibs := mingw32 SDL2main SDL2 SDL2_image
 gccBase := $(patsubst %,${srcdir}src/%.c,$(files)) -I$(srcdir)include -L$(srcdir)lib
 

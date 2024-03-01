@@ -2,6 +2,7 @@
 #define TRANSFORMS_H
 
 #include <sys/types.h>
+#include <math.h>
 
 typedef struct
 {
