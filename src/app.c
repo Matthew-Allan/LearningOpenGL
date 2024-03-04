@@ -93,7 +93,7 @@ void closeApp(App *app)
     closeAppWindow(app);
     free(app->path);
     freeImages(app->images, -1);
-    freeAxex(app->axes, -1);
+    freeAxes(app->axes, -1);
     free(app);
     SDL_Quit();
     printf("Goodbye!");

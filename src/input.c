@@ -9,18 +9,18 @@ int checkKey(SDL_KeyCode *keys, int length,  SDL_KeyCode code)
     return 0;
 }
 
-Axis *freeAxix(Axis *axis)
+Axis *freeAxis(Axis *axis)
 {
     Axis *next = axis->next;
     free(axis);
     return next;
 }
 
-Axis *freeAxex(Axis *axes, size_t count)
+Axis *freeAxes(Axis *axes, size_t count)
 {
     Axis *axis = axes;
     for(; count != 0 && axis != NULL; count -= count > 0)
-        axis = freeAxix(axis);
+        axis = freeAxis(axis);
     return axis;
 }
 

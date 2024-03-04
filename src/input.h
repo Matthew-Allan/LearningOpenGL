@@ -14,8 +14,8 @@ typedef struct Axis
     struct Axis *next;
 } Axis;
 
-Axis *freeAxix(Axis *axis);
-Axis *freeAxex(Axis *axes, size_t count);
+Axis *freeAxis(Axis *axis);
+Axis *freeAxes(Axis *axes, size_t count);
 Axis *createAxis(char *name, int positiveCount, SDL_Scancode positive[5], int negativeCount, SDL_Scancode negative[5]);
 
 #endif
