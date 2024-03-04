@@ -13,6 +13,7 @@ typedef struct
 {
     vec3 pos;
     vec3 target;
+    vec3 up;
     float aspect;
     PROJECTION projectionType;
     mat4 view;

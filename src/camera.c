@@ -13,7 +13,7 @@ void setProjection(Camera *camera)
 
 void updateView(Camera *camera)
 {
-    lookAt(camera->pos, camera->target, vec3(0, 1, 0), &camera->view);
+    lookAt(camera->pos, camera->target, camera->up, &camera->view);
 }
 
 Camera *createCamera(vec3 pos, vec3 target, float aspect, PROJECTION projectionType)
@@ -21,6 +21,7 @@ Camera *createCamera(vec3 pos, vec3 target, float aspect, PROJECTION projectionT
     Camera *camera = (Camera *)malloc(sizeof(Camera));
     camera->pos = pos;
     camera->target = target;
+    camera->up = vec3(0, 1, 0);
     camera->aspect = aspect;
     camera->projectionType = projectionType;
 
