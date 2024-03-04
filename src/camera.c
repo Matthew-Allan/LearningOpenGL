@@ -46,8 +46,21 @@ void setCamTarget(Camera *camera, vec3 target)
     updateView(camera);
 }
 
+void setCamDir(Camera *camera, vec3 dir)
+{
+    add3(&dir, &camera->pos, &camera->target, 1);
+
+    updateView(camera);
+}
+
 void setAspect(Camera *camera, float aspect)
 {
     camera->aspect = aspect;
     setProjection(camera);
+}
+
+void setCamFOV(Camera *camera, float fov)
+{
+    if (camera->projectionType == PERSPECTIVE)
+        perspective(&camera->projection, fov, camera->aspect, 0.1f, 100.0f);
 }

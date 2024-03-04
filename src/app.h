@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "image.h"
+#include "input.h"
 
 #define ASPECT(app) ((float)((App*)(app))->w / (float)((App*)(app))->h)
 
@@ -16,6 +17,16 @@ typedef struct
     int h;
     char *path;
     Image *images;
+    Axis *axes;
+    int mouseXDelta;
+    int mouseYDelta;
+    int scrollDelta;
+    const Uint8 *keyboardState;
+    Uint64 prevTime;
+    Uint64 deltaTime;
+    Uint64 prevSec;
+    int frames;
+    int fps;
 } App;
 
 App *setUpApp(SDL_Window *window);
@@ -24,5 +35,8 @@ void closeApp(App *app);
 void updateDimentions(App *app);
 void *readResource(char *relativePath, App *app);
 Image *readImageRsrc(char *relativePath, App *app, bool flipped);
+int addAxis(App *app, Axis *axis);
+int getAxisValue(App *app, char *name);
+void tickFrame(App *app);
 
 #endif

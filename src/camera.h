@@ -24,5 +24,7 @@ Camera *createCamera(vec3 pos, vec3 target, float aspect, PROJECTION projectionT
 void setAspect(Camera *camera, float aspect);
 void setCamPos(Camera *camera, vec3 pos);
 void setCamTarget(Camera *camera, vec3 target);
+void setCamDir(Camera *camera, vec3 dir);
+void setCamFOV(Camera *camera, float fov);
 
 #endif

@@ -1,4 +1,5 @@
 #include "input.h"
+#include "string.h"
 
 int checkKey(SDL_KeyCode *keys, int length,  SDL_KeyCode code)
 {
@@ -8,13 +9,30 @@ int checkKey(SDL_KeyCode *keys, int length,  SDL_KeyCode code)
     return 0;
 }
 
-void takeAxisKey(Axis *axis, SDL_KeyCode code)
+Axis *freeAxix(Axis *axis)
 {
-    if (checkKey(axis->negative, axis->negativeCount, code))
-    {
-        axis->value--;
-        return;
-    }
-    if (checkKey(axis->positive, axis->positiveCount, code))
-        axis->value++;
+    Axis *next = axis->next;
+    free(axis);
+    return next;
+}
+
+Axis *freeAxex(Axis *axes, size_t count)
+{
+    Axis *axis = axes;
+    for(; count != 0 && axis != NULL; count -= count > 0)
+        axis = freeAxix(axis);
+    return axis;
+}
+
+Axis *createAxis(char *name, int positiveCount, SDL_Scancode positive[5], int negativeCount, SDL_Scancode negative[5])
+{
+    Axis *axis = (Axis *)malloc(sizeof(Axis));
+    axis->name[0] = '\0';
+    strncat(axis->name, name, 63);
+    axis->positiveCount = positiveCount;
+    axis->negativeCount = negativeCount;
+    memcpy(axis->positive, positive, sizeof(SDL_Scancode) * 5);
+    memcpy(axis->negative, negative, sizeof(SDL_Scancode) * 5);
+    axis->next = NULL;
+    return axis;
 }

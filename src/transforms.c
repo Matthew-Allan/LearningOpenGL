@@ -35,30 +35,6 @@ float mag4(vec4 vector)
     return sqrtf(mag4sqr(vector));
 }
 
-void norm2(vec2 in, vec2 *out)
-{
-    float scale = 1.0f / mag2(in);
-    multiply2(scaleMat2(scale, scale), &in, out, 1);
-}
-
-void norm3(vec3 in, vec3 *out)
-{
-    float scale = 1.0f / mag3(in);
-    multiply3(scaleMat3(scale, scale, scale), &in, out, 1);
-}
-
-void norm4(vec4 in, vec4 *out)
-{
-    float scale = 1.0f / mag4(in);
-    multiply4(scaleMat4(scale, scale, scale, scale), &in, out, 1);
-}
-
-void norm4Homogeneous(vec4 in, vec4 *out)
-{
-    float scale = 1.0f / mag3(vec3(in.x, in.y, in.z));
-    multiply4(scaleMat4(scale, scale, scale, 1), &in, out, 1);
-}
-
 float dot2(vec2 inA, vec2 inB)
 {
     return (inA.x * inB.x) + (inA.y * inB.y);
@@ -72,6 +48,36 @@ float dot3(vec3 inA, vec3 inB)
 float dot4(vec4 inA, vec4 inB)
 {
     return (inA.x * inB.x) + (inA.y * inB.y) + (inA.z * inB.z) + (inA.w * inB.w);
+}
+
+void scalarMult2(vec2 *in, vec2 *out, size_t size, float scalar)
+{
+    for(size_t i = 0; i < size; i++)
+    {
+        out[i].x = in->x * scalar;
+        out[i].y = in->y * scalar;
+    }
+}
+
+void scalarMult3(vec3 *in, vec3 *out, size_t size, float scalar)
+{
+    for(size_t i = 0; i < size; i++)
+    {
+        out[i].x = in->x * scalar;
+        out[i].y = in->y * scalar;
+        out[i].z = in->z * scalar;
+    }
+}
+
+void scalarMult4(vec4 *in, vec4 *out, size_t size, float scalar)
+{
+    for(size_t i = 0; i < size; i++)
+    {
+        out[i].x = in->x * scalar;
+        out[i].y = in->y * scalar;
+        out[i].z = in->z * scalar;
+        out[i].w = in->w * scalar;
+    }
 }
 
 void multiply2(mat2 inA, vec2 *inB, vec2 *out, size_t size)
@@ -105,6 +111,34 @@ void multiply4(mat4 inA, vec4 *inB, vec4 *out, size_t size)
         out[i].z = dot4(vec4(inA.i.z, inA.j.z, inA.k.z, inA.l.z), vector);
         out[i].w = dot4(vec4(inA.i.w, inA.j.w, inA.k.w, inA.l.w), vector);
     }
+}
+
+void norm2(vec2 in, vec2 *out)
+{
+    float mag = mag2(in);
+    float scale = (mag == 0) ? 0.0f : 1.0f / mag;
+    scalarMult2(&in, out, 1, scale);
+}
+
+void norm3(vec3 in, vec3 *out)
+{
+    float mag = mag3(in);
+    float scale = (mag == 0) ? 0.0f : 1.0f / mag;
+    scalarMult3(&in, out, 1, scale);
+}
+
+void norm4(vec4 in, vec4 *out)
+{
+    float mag = mag4(in);
+    float scale = (mag == 0) ? 0.0f : 1.0f / mag;
+    scalarMult4(&in, out, 1, scale);
+}
+
+void norm4Homogeneous(vec4 in, vec4 *out)
+{
+    float mag = mag3(vec3(in.x, in.y, in.z));
+    float scale = (mag == 0) ? 0.0f : 1.0f / mag;
+    multiply4(scaleMat4(scale, scale, scale, 1), &in, out, 1);
 }
 
 void add2(vec2 *inA, vec2 *inB, vec2 *out, size_t size)

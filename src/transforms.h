@@ -99,6 +99,10 @@ void multiply2(mat2 inA, vec2 *inB, vec2 *out, size_t size);
 void multiply3(mat3 inA, vec3 *inB, vec3 *out, size_t size);
 void multiply4(mat4 inA, vec4 *inB, vec4 *out, size_t size);
 
+void scalarMult2(vec2 *in, vec2 *out, size_t size, float scalar);
+void scalarMult3(vec3 *in, vec3 *out, size_t size, float scalar);
+void scalarMult4(vec4 *in, vec4 *out, size_t size, float scalar);
+
 void add2(vec2 *inA, vec2 *inB, vec2 *out, size_t size);
 void add3(vec3 *inA, vec3 *inB, vec3 *out, size_t size);
 void add4(vec4 *inA, vec4 *inB, vec4 *out, size_t size);

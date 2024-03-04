@@ -12,8 +12,9 @@
 #include "object.h"
 #include "camera.h"
 #include "world.h"
+#include "input.h"
 
-#define DEFAULT_SCREEN_WIDTH 800
+#define DEFAULT_SCREEN_WIDTH 1600
 #define DEFAULT_SCREEN_HEIGHT 800
 #define SCREEN_FLAGS SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
 
@@ -25,7 +26,7 @@
 
 #define CLEAR_COLOUR 0.2f, 0.3f, 0.3f, 1.0f
 
-#define VSYNC 1
+#define VSYNC true
 
 void resizeViewport(SDL_Window *window)
 {
@@ -91,6 +92,16 @@ SDL_Window *setUpWindow()
         SDL_Quit();
         return NULL;
     }
+
+    if (SDL_SetRelativeMouseMode(GL_TRUE) != 0)
+    {
+        printf("Could not enable relative mouse mode. Error: %s\n", SDL_GetError());
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return NULL;
+    }
+
+    printf("%d\n", SDL_ShowCursor(SDL_QUERY));
 
     printf("GL Version: %s\n", glGetString(GL_VERSION));
 
@@ -269,6 +280,9 @@ void pollEvents(App *app, World *world)
             updateDimentions(app);
             setAspect(world->camera, ASPECT(app));
             break;
+        case SDL_MOUSEWHEEL:
+            app->scrollDelta += e.wheel.y;
+            break;
         default:
             break;
         }
@@ -282,13 +296,8 @@ void draw(App *app, World *world, GLuint shaderProgram)
     glUseProgram(shaderProgram);
 
     GLuint ticksPos = glGetUniformLocation(shaderProgram, "ticks");
-    int ticks = SDL_GetTicks64();
+    Uint64 ticks = SDL_GetTicks64();
     glUniform1i(ticksPos, ticks);
-
-    float camX = sinf(ticks / -2000.0f) * 10.0f;
-    float camZ = cosf(ticks / -2000.0f) * 10.0f;
-
-    setCamPos(world->camera, vec3(camX, 0, camZ));
 
     GLuint projectionPos = glGetUniformLocation(shaderProgram, "projection");
     GLuint viewPos = glGetUniformLocation(shaderProgram, "view");
@@ -336,6 +345,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Set up inputs.
+
+    addAxis(app, createAxis("x", 3, (SDL_Scancode[5]){SDL_SCANCODE_RIGHT, SDL_SCANCODE_D, SDL_SCANCODE_P}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LEFT, SDL_SCANCODE_A}));
+    addAxis(app, createAxis("y", 2, (SDL_Scancode[5]){SDL_SCANCODE_LCTRL,SDL_SCANCODE_RCTRL}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LSHIFT,SDL_SCANCODE_RSHIFT}));
+    addAxis(app, createAxis("z", 2, (SDL_Scancode[5]){SDL_SCANCODE_UP, SDL_SCANCODE_W}, 2, (SDL_Scancode[5]){SDL_SCANCODE_DOWN, SDL_SCANCODE_S}));
+
     // Set up world.
 
     World *world = createWorld();
@@ -366,16 +381,51 @@ int main(int argc, char *argv[])
 
     // Run gameloop.
 
+    float pitch = 0;
+    float yaw = rad(-90);
+    int fov = 45;
+
     while (app->running)
     {
         // Poll events such as resizing window, hitting keys, or exiting the app.
         pollEvents(app, world);
+
+        float movementSpeed = 10.0f;
+
+        vec3 movementAxes = vec3(getAxisValue(app, "x"), getAxisValue(app, "y"), -getAxisValue(app, "z"));
+        norm3(movementAxes, &movementAxes);
+        scalarMult3(vecArr3(movementAxes), vecArr3(movementAxes), 1, movementSpeed * (app->deltaTime / 1000.0f));
+
+        pitch -= app->mouseYDelta / 1000.0f;
+        yaw += app->mouseXDelta / 1000.0f;
+        fov -= app->scrollDelta;
+
+        if (fov < 1)
+            fov = 1;
+        if (fov > 110)
+            fov = 110; 
+
+        setCamFOV(camera, rad(fov));
+
+        printf("%f, %f, %d\n", yaw, pitch, fov);
+
+        vec3 camPos;
+        vec3 camTarget;
+        add3(&world->camera->pos, &movementAxes, &camPos, 1);
+
+        setCamPos(world->camera, camPos);
+        setCamDir(world->camera, vec3(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
 
         // Draw to screen
         draw(app, world, shaderProgram);
 
         // Flip buffers.
         SDL_GL_SwapWindow(app->window);
+
+        printf("%d\n", app->fps);
+
+        // Update deltatime;
+        tickFrame(app);
     }
 
     // Close app.
