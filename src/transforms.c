@@ -167,6 +167,13 @@ void sub4(vec4 *inA, vec4 *inB, vec4 *out, size_t size)
     }
 }
 
+void cross(vec3 inA, vec3 inB, vec3 *out)
+{
+    out->x = (inA.y * inB.z) - (inA.z * inB.y);
+    out->y = (inA.z * inB.x) - (inA.x * inB.z);
+    out->z = (inA.x * inB.y) - (inA.y * inB.x);
+}
+
 void genRotationMatrix(mat4 *out, float angle, vec3 axis)
 {
     float sinval = sinf(angle);
@@ -213,4 +220,23 @@ void perspective(mat4 *out, float fov, float aspect, float near, float far)
     out->j = vec4(0, f, 0, 0);
     out->k = vec4(0, 0, (far + near) / (near - far), -1);
     out->l = vec4(0, 0, 2.0f * far * near / (near - far), 0);
+}
+
+void lookAt(vec3 pos, vec3 target, vec3 worldUp, mat4 *out)
+{
+    vec3 dir;
+    sub3(&pos, &target, &dir, 1);
+    norm3(dir, &dir);
+
+    vec3 right;
+    cross(worldUp, dir, &right);
+    norm3(right, &right);
+
+    vec3 up;
+    cross(dir, right, &up);
+
+    out->i = vec4(right.x, up.x, dir.x, 0);
+    out->j = vec4(right.y, up.y, dir.y, 0);
+    out->k = vec4(right.z, up.z, dir.z, 0);
+    out->l = vec4(-dot3(right, pos), -dot3(up, pos), -dot3(dir, pos), 1);
 }

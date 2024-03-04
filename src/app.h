@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include "image.h"
 
-#define RATIO(app) ((float)((App*)(app))->w / (float)((App*)(app))->h)
+#define ASPECT(app) ((float)((App*)(app))->w / (float)((App*)(app))->h)
 
 typedef struct
 {
@@ -20,7 +20,7 @@ typedef struct
 
 App *setUpApp(SDL_Window *window);
 void closeAppWindow(App *app);
-int closeApp(App *app, int code);
+void closeApp(App *app);
 void updateDimentions(App *app);
 void *readResource(char *relativePath, App *app);
 Image *readImageRsrc(char *relativePath, App *app, bool flipped);

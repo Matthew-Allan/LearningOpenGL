@@ -10,6 +10,8 @@
 #include "texture.h"
 #include "transforms.h"
 #include "object.h"
+#include "camera.h"
+#include "world.h"
 
 #define DEFAULT_SCREEN_WIDTH 800
 #define DEFAULT_SCREEN_HEIGHT 800
@@ -95,9 +97,6 @@ SDL_Window *setUpWindow()
     if (SDL_GL_SetSwapInterval(VSYNC) != 0)
     {
         printf("Could not enable vsync. Error: %s\n", SDL_GetError());
-        //SDL_DestroyWindow(window);
-        //SDL_Quit();
-        //return NULL;
     }
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -146,7 +145,7 @@ GLuint setUpShaderProgram(App *app)
     return shaderProgram;
 }
 
-WorldObject *loadCubeWithTextures(App *app, GLuint shaderProgram, vec3 pos)
+WorldObject *loadCubeWithTextures(App *app, World *world, GLuint shaderProgram, vec3 pos)
 {
     printf("Creating Object\n");
 
@@ -200,7 +199,7 @@ WorldObject *loadCubeWithTextures(App *app, GLuint shaderProgram, vec3 pos)
     vertexAttributes[1] = (VertexAttribute){1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float))};
     vertexAttributes[2] = (VertexAttribute){2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float))};
 
-    WorldObject *cube = createWorldObject(createVAO(vertices, sizeof(vertices), indices + 0, sizeof(indices), vertexAttributes, 3), 36);
+    WorldObject *cube = createWorldObject(createVAO(vertices, sizeof(vertices), indices + 0, sizeof(indices), vertexAttributes, 3), 36, pos, ++world->prevId);
 
     Image *shipImage = readImageRsrc("img/Ship.png", app, true);
     Image *shieldImage = readImageRsrc("img/Shield.png", app, true);
@@ -215,14 +214,44 @@ WorldObject *loadCubeWithTextures(App *app, GLuint shaderProgram, vec3 pos)
     addTexToWorldObject(cube, createTexture(waterImage, GL_RGB, GL_LINEAR, GL_REPEAT), "texture2", shaderProgram);
     addTexToWorldObject(cube, createTexture(causticsImage, GL_RGB, GL_LINEAR, GL_REPEAT), "texture3", shaderProgram);
 
-    freeImages(app->images, &app->images, 4);
-
-    cube->pos = pos;
+    app->images = freeImages(app->images, 4);
 
     return cube;
 }
 
-void pollEvents(App *app)
+int loadObjectsIntoWorld(App *app, World *world, GLuint shaderProgram)
+{
+    GLuint objectCount = 10;
+    WorldObject *objects[objectCount];
+
+    if ((objects[0] = loadCubeWithTextures(app, world, shaderProgram, vec3(0, 0, 0))) == NULL)
+        return 1;
+    if ((objects[1] = loadCubeWithTextures(app, world, shaderProgram, vec3(2, 5, -15))) == NULL)
+        return 1;
+    if ((objects[2] = loadCubeWithTextures(app, world, shaderProgram, vec3(-1.5, -2.2, -2.5))) == NULL)
+        return 1;
+    if ((objects[3] = loadCubeWithTextures(app, world, shaderProgram, vec3(-3.8f, -2.0f, -12.3f))) == NULL)
+        return 1;
+    if ((objects[4] = loadCubeWithTextures(app, world, shaderProgram, vec3(2.4f, -0.4f, -3.5f))) == NULL)
+        return 1;
+    if ((objects[5] = loadCubeWithTextures(app, world, shaderProgram, vec3(-1.7f, 3.0f, -7.5f))) == NULL)
+        return 1;
+    if ((objects[6] = loadCubeWithTextures(app, world, shaderProgram, vec3(1.3f, -2.0f, -2.5f))) == NULL)
+        return 1;
+    if ((objects[7] = loadCubeWithTextures(app, world, shaderProgram, vec3(1.5f, 2.0f, -2.5f))) == NULL)
+        return 1;
+    if ((objects[8] = loadCubeWithTextures(app, world, shaderProgram, vec3(1.5f, 0.2f, -1.5f))) == NULL)
+        return 1;
+    if ((objects[9] = loadCubeWithTextures(app, world, shaderProgram, vec3(-1.3f, 1.0f, -1.5f))) == NULL)
+        return 1;
+
+    for(int i = 0; i < objectCount; i++)
+        addWorldObject(world, objects[i]);
+
+    return 0;
+}
+
+void pollEvents(App *app, World *world)
 {
     SDL_Event e;
 
@@ -233,10 +262,12 @@ void pollEvents(App *app)
         {
         case SDL_QUIT:
             app->running = false;
+            break;
         case SDL_WINDOWEVENT:
             if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 resizeViewport(app->window);
             updateDimentions(app);
+            setAspect(world->camera, ASPECT(app));
             break;
         default:
             break;
@@ -244,7 +275,7 @@ void pollEvents(App *app)
     }
 }
 
-void draw(App *app, GLuint shaderProgram, WorldObject **objects, size_t objectCount)
+void draw(App *app, World *world, GLuint shaderProgram)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -254,34 +285,36 @@ void draw(App *app, GLuint shaderProgram, WorldObject **objects, size_t objectCo
     int ticks = SDL_GetTicks64();
     glUniform1i(ticksPos, ticks);
 
-    for (int i = 0; i < objectCount; i++)
+    float camX = sinf(ticks / -2000.0f) * 10.0f;
+    float camZ = cosf(ticks / -2000.0f) * 10.0f;
+
+    setCamPos(world->camera, vec3(camX, 0, camZ));
+
+    GLuint projectionPos = glGetUniformLocation(shaderProgram, "projection");
+    GLuint viewPos = glGetUniformLocation(shaderProgram, "view");
+
+    glUniformMatrix4fv(projectionPos, 1, GL_FALSE, vecPos(world->camera->projection));
+    glUniformMatrix4fv(viewPos, 1, GL_FALSE, vecPos(world->camera->view));
+
+    for (WorldObject *object = world->objects; object != NULL; object = object->next)
     {
-        for (int j = 0; j < objects[i]->textureCount; j++)
+        for (int j = 0; j < object->textureCount; j++)
         {
             glActiveTexture(GL_TEXTURE0 + j);
-            glBindTexture(GL_TEXTURE_2D, objects[i]->textures[j]);
+            glBindTexture(GL_TEXTURE_2D, object->textures[j]);
         }
 
         mat4 model = identMat4;
-        mat4 projection = identMat4;
-        mat4 view = translationMat4(0, 0, -3.0);
 
-        genRotationMatrix(&model, rad(-55.0f), vec3(1, 0, 0));
-        rotate((vec4 *)&model, (vec4 *)&model, 4, ticks / 4000.0f, vec3(0.5f, 1.0f, 0.0f));
-        translate((vec4 *)&model, (vec4 *)&model, 4, objects[i]->pos);
-        perspective(&projection, rad(45), (float)app->w / (float)app->h, 0.1f, 100.0f);
-        //orthographic(&projection, -ASPECT_RATIO(app) * 6, ASPECT_RATIO(app) * 6, -6, 6, 0.1, 100);
+        rotate(vecArr4(model), vecArr4(model), 4, ticks / 4000.0f, vec3(0.5f, 1.0f, 0.0f));
+        translate(vecArr4(model), vecArr4(model), 4, object->pos);
 
         GLuint modelPos = glGetUniformLocation(shaderProgram, "model");
-        GLuint viewPos = glGetUniformLocation(shaderProgram, "view");
-        GLuint projectionPos = glGetUniformLocation(shaderProgram, "projection");
 
         glUniformMatrix4fv(modelPos, 1, GL_FALSE, vecPos(model));
-        glUniformMatrix4fv(viewPos, 1, GL_FALSE, vecPos(view));
-        glUniformMatrix4fv(projectionPos, 1, GL_FALSE, vecPos(projection));
 
-        glBindVertexArray(objects[i]->vao);
-        glDrawElements(GL_TRIANGLES, objects[i]->vertexCount, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(object->vao);
+        glDrawElements(GL_TRIANGLES, object->vertexCount, GL_UNSIGNED_INT, 0);
     }
 }
 
@@ -303,49 +336,43 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // Set up shader program
+    // Set up world.
+
+    World *world = createWorld();
+
+    // Set up camera.
+
+    Camera *camera = createCamera(vec3(0, 0, 3), vec3(0, 0, 0), ASPECT(app), PERSPECTIVE);
+    setCamera(world, camera);
+
+    // Set up shader program.
 
     GLuint shaderProgram = setUpShaderProgram(app);
     if (shaderProgram == 0)
-        return closeApp(app, 1);
+    {
+        freeWorld(world);
+        closeApp(app);
+        return 1;
+    }
 
     // Objects.
 
-    GLuint objectCount = 10;
-    WorldObject *objects[objectCount];
-
-    if ((objects[0] = loadCubeWithTextures(app, shaderProgram, vec3(0, 0, 0))) == NULL)
-        return closeApp(app, 1);
-    if ((objects[1] = loadCubeWithTextures(app, shaderProgram, vec3(2, 5, -15))) == NULL)
-        return closeApp(app, 1);
-    if ((objects[2] = loadCubeWithTextures(app, shaderProgram, vec3(-1.5, -2.2, -2.5))) == NULL)
-        return closeApp(app, 1);
-    if ((objects[3] = loadCubeWithTextures(app, shaderProgram, vec3(-3.8f, -2.0f, -12.3f))) == NULL)
-        return closeApp(app, 1);
-    if ((objects[4] = loadCubeWithTextures(app, shaderProgram, vec3(2.4f, -0.4f, -3.5f))) == NULL)
-        return closeApp(app, 1);
-    if ((objects[5] = loadCubeWithTextures(app, shaderProgram, vec3(-1.7f, 3.0f, -7.5f))) == NULL)
-        return closeApp(app, 1);
-    if ((objects[6] = loadCubeWithTextures(app, shaderProgram, vec3(1.3f, -2.0f, -2.5f))) == NULL)
-        return closeApp(app, 1);
-    if ((objects[7] = loadCubeWithTextures(app, shaderProgram, vec3(1.5f, 2.0f, -2.5f))) == NULL)
-        return closeApp(app, 1);
-    if ((objects[8] = loadCubeWithTextures(app, shaderProgram, vec3(1.5f, 0.2f, -1.5f))) == NULL)
-        return closeApp(app, 1);
-    if ((objects[9] = loadCubeWithTextures(app, shaderProgram, vec3(-1.3f, 1.0f, -1.5f))) == NULL)
-        return closeApp(app, 1);
-
-    printf("Done!\n");
+    if (loadObjectsIntoWorld(app, world, shaderProgram))
+    {
+        freeWorld(world);
+        closeApp(app);
+        return 1;
+    }
 
     // Run gameloop.
 
     while (app->running)
     {
         // Poll events such as resizing window, hitting keys, or exiting the app.
-        pollEvents(app);
+        pollEvents(app, world);
 
         // Draw to screen
-        draw(app, shaderProgram, objects, objectCount);
+        draw(app, world, shaderProgram);
 
         // Flip buffers.
         SDL_GL_SwapWindow(app->window);
@@ -353,8 +380,8 @@ int main(int argc, char *argv[])
 
     // Close app.
 
-    for (int i = 0; i < objectCount; i++)
-        free(objects[i]);
+    freeWorld(world);
+    closeApp(app);
 
-    return closeApp(app, 0);
+    return 0;
 }

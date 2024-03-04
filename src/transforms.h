@@ -70,7 +70,12 @@ typedef struct
 #define PI 3.14159265358979323846264338327950288
 
 #define rad(deg) ((deg) * PI / 180)
+
 #define vecPos(item) ((GLfloat*)&item)
+
+#define vecArr2(item) ((vec2*)((mat2*)(&item)))
+#define vecArr3(item) ((vec3*)((mat3*)(&item)))
+#define vecArr4(item) ((vec4*)((mat4*)(&item)))
 
 float mag2sqr(vec2 vector);
 float mag3sqr(vec3 vector);
@@ -102,6 +107,8 @@ void sub2(vec2 *inA, vec2 *inB, vec2 *out, size_t size);
 void sub3(vec3 *inA, vec3 *inB, vec3 *out, size_t size);
 void sub4(vec4 *inA, vec4 *inB, vec4 *out, size_t size);
 
+void cross(vec3 inA, vec3 inB, vec3 *out);
+
 void genRotationMatrix(mat4 *out, float angle, vec3 axis);
 
 void rotate(vec4 *in, vec4 *out, size_t size, float angle, vec3 axis);
@@ -113,5 +120,7 @@ void scale(vec4 *in, vec4 *out, size_t size, vec3 scale);
 void orthographic(mat4 *out, float left, float right, float bottom, float top, float near, float far);
 
 void perspective(mat4 *out, float fov, float aspect, float near, float far);
+
+void lookAt(vec3 pos, vec3 target, vec3 worldUp, mat4 *out);
 
 #endif

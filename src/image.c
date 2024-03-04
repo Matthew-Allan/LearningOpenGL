@@ -74,10 +74,10 @@ Image *freeImage(Image *image)
     return next;
 }
 
-void freeImages(Image *images, Image **prev, ssize_t count)
+Image *freeImages(Image *images, ssize_t count)
 {
     Image *image = images;
     for(; count != 0 && image != NULL; count -= count > 0)
         image = freeImage(image);
-    *prev = image;
+    return image;
 }

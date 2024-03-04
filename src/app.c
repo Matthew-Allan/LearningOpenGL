@@ -77,15 +77,14 @@ void closeAppWindow(App *app)
     app->window = NULL;
 }
 
-int closeApp(App *app, int code)
+void closeApp(App *app)
 {
     closeAppWindow(app);
     free(app->path);
-    freeImages(app->images, &app->images, -1);
+    app->images = freeImages(app->images, -1);
     free(app);
     SDL_Quit();
     printf("Goodbye!");
-    return code;
 }
 
 void *readResource(char *relativePath, App *app)
