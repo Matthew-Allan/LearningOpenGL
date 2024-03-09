@@ -13,15 +13,18 @@ void setProjection(Camera *camera)
 
 void updateView(Camera *camera)
 {
-    lookAt(camera->pos, camera->target, camera->up, &camera->view);
+    vec3 target;
+    add3(&camera->pos, &camera->dir, &target, 1);
+    lookAt(camera->pos, target, camera->up, &camera->view);
 }
 
-Camera *createCamera(vec3 pos, vec3 target, float aspect, PROJECTION projectionType)
+Camera *createCamera(vec3 pos, vec3 dir, float aspect, PROJECTION projectionType)
 {
     Camera *camera = (Camera *)malloc(sizeof(Camera));
     camera->pos = pos;
-    camera->target = target;
+    camera->dir = dir;
     camera->up = vec3(0, 1, 0);
+    camera->worldUp = vec3(0, 1, 0);
     camera->aspect = aspect;
     camera->projectionType = projectionType;
 
@@ -41,14 +44,14 @@ void setCamPos(Camera *camera, vec3 pos)
 
 void setCamTarget(Camera *camera, vec3 target)
 {
-    camera->target = target;
-
-    updateView(camera);
+    vec3 dir;
+    sub3(&target, &camera->pos, &dir, 1);
+    setCamDir(camera, dir);
 }
 
 void setCamDir(Camera *camera, vec3 dir)
 {
-    add3(&dir, &camera->pos, &camera->target, 1);
+    norm3(dir, &camera->dir);
 
     updateView(camera);
 }

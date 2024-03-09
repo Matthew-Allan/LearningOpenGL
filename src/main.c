@@ -357,7 +357,7 @@ int main(int argc, char *argv[])
 
     // Set up camera.
 
-    Camera *camera = createCamera(vec3(0, 0, 3), vec3(0, 0, 0), ASPECT(app), PERSPECTIVE);
+    Camera *camera = createCamera(vec3(0, 0, 3), vec3(0, 0, -1), ASPECT(app), PERSPECTIVE);
     setCamera(world, camera);
 
     // Set up shader program.
@@ -391,13 +391,34 @@ int main(int argc, char *argv[])
         pollEvents(app, world);
 
         float movementSpeed = 10.0f;
+        float relativeSpeed = movementSpeed * (app->deltaTime / 1000.0f);
 
         Input *input = app->input;
 
         vec3 movementAxes = get3DAxisValue(input, "x", "y", "z");
 
+        vec3 right;
+        cross(camera->dir, camera->worldUp, &right);
+        norm3(right, &right);
+        scalarMult3(&right, &right, 1, relativeSpeed * movementAxes.x);
+
+        vec3 front;
+        scalarMult3(&camera->dir, &front, 1, relativeSpeed * movementAxes.z);
+
+        vec3 up;
+        scalarMult3(&camera->worldUp, &up, 1, relativeSpeed * movementAxes.y);
+
+        vec3 movementVector;
+        add3(&right, &front, &movementVector, 1);
+        add3(&movementVector, &up, &movementVector, 1);
+
+        vec3 newCamPos;
+        add3(&movementVector, &camera->pos, &newCamPos, 1);
+
+        setCamPos(camera, newCamPos);
+
         norm3(movementAxes, &movementAxes);
-        scalarMult3(vecArr3(movementAxes), vecArr3(movementAxes), 1, movementSpeed * (app->deltaTime / 1000.0f));
+        scalarMult3(vecArr3(movementAxes), vecArr3(movementAxes), 1, relativeSpeed);
 
         pitch -= input->mouseYDelta / 1000.0f;
         yaw += input->mouseXDelta / 1000.0f;
@@ -410,12 +431,6 @@ int main(int argc, char *argv[])
 
         setCamFOV(camera, rad(fov));
 
-        printf("%f, %f, %d\n", yaw, pitch, fov);
-
-        vec3 camPos;
-        add3(&world->camera->pos, &movementAxes, &camPos, 1);
-
-        setCamPos(world->camera, camPos);
         setCamDir(world->camera, vec3(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
 
         // Draw to screen
@@ -424,7 +439,7 @@ int main(int argc, char *argv[])
         // Flip buffers.
         SDL_GL_SwapWindow(app->window);
 
-        printf("%d\n", app->fps);
+        //printf("%d\n", app->fps);
 
         // Update deltatime;
         tickFrame(app);
