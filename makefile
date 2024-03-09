@@ -1,5 +1,5 @@
 srcdir := "$(dir $(abspath $(lastword $(MAKEFILE_LIST))))"
-files := main shader app buffers image texture files transforms object glad/glad 
+files := main shader app buffers image texture files transforms object world camera input glad/glad 
 outputnm := main
 unixLibs := SDL2 SDL2_image m
 windowsLibs := mingw32 SDL2main SDL2 SDL2_image
@@ -27,5 +27,7 @@ build:
 	$(gccCommand)
 build-win-nocons:
 	$(gccCommand) -mwindows
+debug:
+	$(gccCommand) -g
 run:
 	$(runCommand)

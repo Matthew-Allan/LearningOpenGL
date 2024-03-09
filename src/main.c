@@ -281,7 +281,7 @@ void pollEvents(App *app, World *world)
             setAspect(world->camera, ASPECT(app));
             break;
         case SDL_MOUSEWHEEL:
-            app->scrollDelta += e.wheel.y;
+            app->input->scrollDelta += e.wheel.y;
             break;
         default:
             break;
@@ -347,9 +347,9 @@ int main(int argc, char *argv[])
 
     // Set up inputs.
 
-    addAxis(app, createAxis("x", 3, (SDL_Scancode[5]){SDL_SCANCODE_RIGHT, SDL_SCANCODE_D, SDL_SCANCODE_P}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LEFT, SDL_SCANCODE_A}));
-    addAxis(app, createAxis("y", 2, (SDL_Scancode[5]){SDL_SCANCODE_LCTRL,SDL_SCANCODE_RCTRL}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LSHIFT,SDL_SCANCODE_RSHIFT}));
-    addAxis(app, createAxis("z", 2, (SDL_Scancode[5]){SDL_SCANCODE_UP, SDL_SCANCODE_W}, 2, (SDL_Scancode[5]){SDL_SCANCODE_DOWN, SDL_SCANCODE_S}));
+    addAxis(app->input, createAxis("x", 2, (SDL_Scancode[5]){SDL_SCANCODE_RIGHT, SDL_SCANCODE_D}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LEFT, SDL_SCANCODE_A}));
+    addAxis(app->input, createAxis("y", 2, (SDL_Scancode[5]){SDL_SCANCODE_LCTRL,SDL_SCANCODE_RCTRL}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LSHIFT,SDL_SCANCODE_RSHIFT}));
+    addAxis(app->input, createAxis("z", 2, (SDL_Scancode[5]){SDL_SCANCODE_UP, SDL_SCANCODE_W}, 2, (SDL_Scancode[5]){SDL_SCANCODE_DOWN, SDL_SCANCODE_S}));
 
     // Set up world.
 
@@ -392,13 +392,16 @@ int main(int argc, char *argv[])
 
         float movementSpeed = 10.0f;
 
-        vec3 movementAxes = vec3(getAxisValue(app, "x"), getAxisValue(app, "y"), -getAxisValue(app, "z"));
+        Input *input = app->input;
+
+        vec3 movementAxes = get3DAxisValue(input, "x", "y", "z");
+
         norm3(movementAxes, &movementAxes);
         scalarMult3(vecArr3(movementAxes), vecArr3(movementAxes), 1, movementSpeed * (app->deltaTime / 1000.0f));
 
-        pitch -= app->mouseYDelta / 1000.0f;
-        yaw += app->mouseXDelta / 1000.0f;
-        fov -= app->scrollDelta;
+        pitch -= input->mouseYDelta / 1000.0f;
+        yaw += input->mouseXDelta / 1000.0f;
+        fov -= input->scrollDelta;
 
         if (fov < 1)
             fov = 1;
@@ -410,7 +413,6 @@ int main(int argc, char *argv[])
         printf("%f, %f, %d\n", yaw, pitch, fov);
 
         vec3 camPos;
-        vec3 camTarget;
         add3(&world->camera->pos, &movementAxes, &camPos, 1);
 
         setCamPos(world->camera, camPos);
