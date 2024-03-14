@@ -409,24 +409,28 @@ int main(int argc, char *argv[])
         cross(camera->worldUp, right, &front);
         norm3(front, &front);
 
-        // Set to correct speed.
-        scalarMult3(&right, &right, 1, relativeSpeed * movementAxes.x);
-        scalarMult3(&front, &front, 1, relativeSpeed * movementAxes.z);
-        scalarMult3(&camera->worldUp, &up, 1, relativeSpeed * movementAxes.y);
+        // Cancel out movement when movementAxes has values of 0.
+        scalarMult3(&right, &right, 1, movementAxes.x);
+        scalarMult3(&front, &front, 1, movementAxes.z);
+        scalarMult3(&camera->worldUp, &up, 1, movementAxes.y);
 
-
+        // Add vectors together to get the delta.
         vec3 movementVector;
         add3(&right, &front, &movementVector, 1);
         add3(&movementVector, &up, &movementVector, 1);
 
-        vec3 newCamPos;
-        add3(&movementVector, &camera->pos, &newCamPos, 1);
-
-        setCamPos(camera, newCamPos);
-
+        // Normalise movement axes and multiply by relative speed.
         norm3(movementAxes, &movementAxes);
         scalarMult3(vecArr3(movementAxes), vecArr3(movementAxes), 1, relativeSpeed);
 
+        // Add the delta to the camera pos
+        vec3 newCamPos;
+        add3(&movementVector, &camera->pos, &newCamPos, 1);
+
+        // Set the camera pos to the new pos.
+        setCamPos(camera, newCamPos);
+
+        // Track mouse and scroll wheel and set FOV and direction as such.
         if(input->trackingMouse)
         {
             pitch -= input->mouseYDelta / 1000.0f;
@@ -437,11 +441,11 @@ int main(int argc, char *argv[])
                 fov = 1;
             if (fov > 110)
                 fov = 110;
+
+            setCamFOV(camera, rad(fov));
+
+            setCamDir(world->camera, vec3(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
         }
-
-        setCamFOV(camera, rad(fov));
-
-        setCamDir(world->camera, vec3(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
 
         // Draw to screen
         draw(app, world, shaderProgram);
