@@ -93,16 +93,6 @@ SDL_Window *setUpWindow()
         return NULL;
     }
 
-    if (SDL_SetRelativeMouseMode(GL_TRUE) != 0)
-    {
-        printf("Could not enable relative mouse mode. Error: %s\n", SDL_GetError());
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return NULL;
-    }
-
-    printf("%d\n", SDL_ShowCursor(SDL_QUERY));
-
     printf("GL Version: %s\n", glGetString(GL_VERSION));
 
     if (SDL_GL_SetSwapInterval(VSYNC) != 0)
@@ -283,6 +273,16 @@ void pollEvents(App *app, World *world)
         case SDL_MOUSEWHEEL:
             app->input->scrollDelta += e.wheel.y;
             break;
+        case SDL_MOUSEBUTTONDOWN:
+            app->input->trackingMouse = !app->input->trackingMouse;
+            if (SDL_SetRelativeMouseMode(app->input->trackingMouse) != 0)
+            {
+                printf("Could not enable relative mouse mode. Error: %s\n", SDL_GetError());
+                SDL_DestroyWindow(app->window);
+                SDL_Quit();
+                app->running = false;
+            }
+            break;
         default:
             break;
         }
@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
     // Set up inputs.
 
     addAxis(app->input, createAxis("x", 2, (SDL_Scancode[5]){SDL_SCANCODE_RIGHT, SDL_SCANCODE_D}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LEFT, SDL_SCANCODE_A}));
-    addAxis(app->input, createAxis("y", 2, (SDL_Scancode[5]){SDL_SCANCODE_LCTRL,SDL_SCANCODE_RCTRL}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LSHIFT,SDL_SCANCODE_RSHIFT}));
+    addAxis(app->input, createAxis("y", 1, (SDL_Scancode[5]){SDL_SCANCODE_SPACE}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LSHIFT,SDL_SCANCODE_RSHIFT}));
     addAxis(app->input, createAxis("z", 2, (SDL_Scancode[5]){SDL_SCANCODE_UP, SDL_SCANCODE_W}, 2, (SDL_Scancode[5]){SDL_SCANCODE_DOWN, SDL_SCANCODE_S}));
 
     // Set up world.
@@ -420,14 +420,17 @@ int main(int argc, char *argv[])
         norm3(movementAxes, &movementAxes);
         scalarMult3(vecArr3(movementAxes), vecArr3(movementAxes), 1, relativeSpeed);
 
-        pitch -= input->mouseYDelta / 1000.0f;
-        yaw += input->mouseXDelta / 1000.0f;
-        fov -= input->scrollDelta;
+        if(app->input->trackingMouse)
+        {
+            pitch -= input->mouseYDelta / 1000.0f;
+            yaw += input->mouseXDelta / 1000.0f;
+            fov -= input->scrollDelta;
 
-        if (fov < 1)
-            fov = 1;
-        if (fov > 110)
-            fov = 110; 
+            if (fov < 1)
+                fov = 1;
+            if (fov > 110)
+                fov = 110;
+        }
 
         setCamFOV(camera, rad(fov));
 

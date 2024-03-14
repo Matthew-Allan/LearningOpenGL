@@ -83,6 +83,7 @@ Input *setUpInput()
     input->mouseXDelta = 0;
     input->mouseYDelta = 0;
     input->scrollDelta = 0;
+    input->trackingMouse = false;
     return input;
 }
 

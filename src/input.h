@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include "transforms.h"
+#include <stdbool.h>
 
 typedef struct Axis
 {
@@ -22,6 +23,7 @@ typedef struct
     int mouseYDelta;
     int scrollDelta;
     const Uint8 *keyboardState;
+    bool trackingMouse;
 } Input;
 
 Input *setUpInput();
