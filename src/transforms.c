@@ -2,6 +2,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
 
 #define SQR(val) (val * val)
 
@@ -273,4 +274,30 @@ void lookAt(vec3 pos, vec3 target, vec3 worldUp, mat4 *out)
     out->j = vec4(right.y, up.y, dir.y, 0);
     out->k = vec4(right.z, up.z, dir.z, 0);
     out->l = vec4(-dot3(right, pos), -dot3(up, pos), -dot3(dir, pos), 1);
+}
+
+void getNorm(vec4 *tri, vec3 *out)
+{
+    vec3 vectorU;
+    sub3(&vec3(tri[1].x, tri[1].y, tri[1].z), &vec3(tri[0].x, tri[0].y, tri[0].z), &vectorU, 1);
+
+    vec3 vectorV;
+    sub3(&vec3(tri[2].x, tri[2].y, tri[2].z), &vec3(tri[0].x, tri[0].y, tri[0].z), &vectorV, 1);
+
+    cross(vectorU, vectorV, out);
+}
+
+void printVec2(vec2 vector, bool withNewline)
+{
+    printf("(%f, %f)%c", vector.x, vector.y, (withNewline) ? '\n' : '\0');
+}
+
+void printVec3(vec3 vector, bool withNewline)
+{
+    printf("(%f, %f, %f)%c", vector.x, vector.y, vector.z, (withNewline) ? '\n' : '\0');
+}
+
+void printVec4(vec4 vector, bool withNewline)
+{
+    printf("(%f, %f, %f, %f)%c", vector.x, vector.y, vector.z, vector.w, (withNewline) ? '\n' : '\0');
 }

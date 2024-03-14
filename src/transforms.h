@@ -3,6 +3,7 @@
 
 #include <sys/types.h>
 #include <math.h>
+#include <stdbool.h>
 
 typedef struct
 {
@@ -70,6 +71,7 @@ typedef struct
 #define PI 3.14159265358979323846264338327950288
 
 #define rad(deg) ((deg) * PI / 180)
+#define deg(rad) ((rad) / (PI / 180))
 
 #define vecPos(item) ((GLfloat*)&item)
 
@@ -126,5 +128,11 @@ void orthographic(mat4 *out, float left, float right, float bottom, float top, f
 void perspective(mat4 *out, float fov, float aspect, float near, float far);
 
 void lookAt(vec3 pos, vec3 target, vec3 worldUp, mat4 *out);
+
+void getNorm(vec4 *tri, vec3 *out);
+
+void printVec2(vec2 vector, bool withNewline);
+void printVec3(vec3 vector, bool withNewline);
+void printVec4(vec4 vector, bool withNewline);
 
 #endif
