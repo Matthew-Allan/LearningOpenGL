@@ -397,16 +397,23 @@ int main(int argc, char *argv[])
 
         vec3 movementAxes = get3DAxisValue(input, "x", "y", "z");
 
+        vec3 front;
         vec3 right;
+        vec3 up;
+
+        // Get right.
         cross(camera->dir, camera->worldUp, &right);
         norm3(right, &right);
+
+        // Get front.
+        cross(camera->worldUp, right, &front);
+        norm3(front, &front);
+
+        // Set to correct speed.
         scalarMult3(&right, &right, 1, relativeSpeed * movementAxes.x);
-
-        vec3 front;
-        scalarMult3(&camera->dir, &front, 1, relativeSpeed * movementAxes.z);
-
-        vec3 up;
+        scalarMult3(&front, &front, 1, relativeSpeed * movementAxes.z);
         scalarMult3(&camera->worldUp, &up, 1, relativeSpeed * movementAxes.y);
+
 
         vec3 movementVector;
         add3(&right, &front, &movementVector, 1);
@@ -420,7 +427,7 @@ int main(int argc, char *argv[])
         norm3(movementAxes, &movementAxes);
         scalarMult3(vecArr3(movementAxes), vecArr3(movementAxes), 1, relativeSpeed);
 
-        if(app->input->trackingMouse)
+        if(input->trackingMouse)
         {
             pitch -= input->mouseYDelta / 1000.0f;
             yaw += input->mouseXDelta / 1000.0f;
@@ -441,8 +448,6 @@ int main(int argc, char *argv[])
 
         // Flip buffers.
         SDL_GL_SwapWindow(app->window);
-
-        //printf("%d\n", app->fps);
 
         // Update deltatime;
         tickFrame(app);
