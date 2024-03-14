@@ -26,6 +26,8 @@
 
 #define CLEAR_COLOUR 0.2f, 0.3f, 0.3f, 1.0f
 
+#define CAP_AT(value, min, max) (((value) > (max)) ? (max) : (((value) < (min)) ? (min) : (value)))
+
 #define VSYNC true
 
 void resizeViewport(SDL_Window *window)
@@ -397,6 +399,10 @@ int main(int argc, char *argv[])
 
         vec3 movementAxes = get3DAxisValue(input, "x", "y", "z");
 
+        // Normalise movement axes and multiply by relative speed.
+        norm3(movementAxes, &movementAxes);
+        scalarMult3(&movementAxes, &movementAxes, 1, relativeSpeed);
+
         vec3 front;
         vec3 right;
         vec3 up;
@@ -419,10 +425,6 @@ int main(int argc, char *argv[])
         add3(&right, &front, &movementVector, 1);
         add3(&movementVector, &up, &movementVector, 1);
 
-        // Normalise movement axes and multiply by relative speed.
-        norm3(movementAxes, &movementAxes);
-        scalarMult3(vecArr3(movementAxes), vecArr3(movementAxes), 1, relativeSpeed);
-
         // Add the delta to the camera pos
         vec3 newCamPos;
         add3(&movementVector, &camera->pos, &newCamPos, 1);
@@ -435,12 +437,11 @@ int main(int argc, char *argv[])
         {
             pitch -= input->mouseYDelta / 1000.0f;
             yaw += input->mouseXDelta / 1000.0f;
+            printf("%f %f\n", pitch, yaw);
             fov -= input->scrollDelta;
 
-            if (fov < 1)
-                fov = 1;
-            if (fov > 110)
-                fov = 110;
+            fov = CAP_AT(fov, 1, 110);
+            pitch = CAP_AT(pitch, rad(-89), rad(89));
 
             setCamFOV(camera, rad(fov));
 
