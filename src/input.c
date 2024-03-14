@@ -31,8 +31,8 @@ Axis *createAxis(char *name, int positiveCount, SDL_Scancode positive[5], int ne
     strncat(axis->name, name, 63);
     axis->positiveCount = positiveCount;
     axis->negativeCount = negativeCount;
-    memcpy(axis->positive, positive, sizeof(SDL_Scancode) * 5);
-    memcpy(axis->negative, negative, sizeof(SDL_Scancode) * 5);
+    memcpy(axis->positive, positive, sizeof(SDL_Scancode) * positiveCount);
+    memcpy(axis->negative, negative, sizeof(SDL_Scancode) * negativeCount);
     axis->next = NULL;
     return axis;
 }

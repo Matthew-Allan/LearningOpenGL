@@ -6,7 +6,7 @@ void setProjection(Camera *camera)
 {
     camera->projection = identMat4;
     if (camera->projectionType == PERSPECTIVE)
-        perspective(&camera->projection, rad(45), camera->aspect, 0.1f, 100.0f);
+        perspective(&camera->projection, camera->fov, camera->aspect, 0.1f, 100.0f);
     else if (camera->projectionType == ORTHOGRAPHIC)
         orthographic(&camera->projection, -camera->aspect * 6, camera->aspect * 6, -6, 6, 0.1, 100);
 }
@@ -18,11 +18,12 @@ void updateView(Camera *camera)
     lookAt(camera->pos, target, camera->up, &camera->view);
 }
 
-Camera *createCamera(vec3 pos, vec3 dir, float aspect, PROJECTION projectionType)
+Camera *createCamera(vec3 pos, vec3 dir, float aspect, float fov, PROJECTION projectionType)
 {
     Camera *camera = (Camera *)malloc(sizeof(Camera));
     camera->pos = pos;
     camera->dir = dir;
+    camera->fov = fov;
     camera->up = vec3(0, 1, 0);
     camera->worldUp = vec3(0, 1, 0);
     camera->aspect = aspect;
@@ -64,6 +65,7 @@ void setAspect(Camera *camera, float aspect)
 
 void setCamFOV(Camera *camera, float fov)
 {
-    if (camera->projectionType == PERSPECTIVE)
-        perspective(&camera->projection, fov, camera->aspect, 0.1f, 100.0f);
+    camera->fov = fov;
+
+    setProjection(camera);
 }

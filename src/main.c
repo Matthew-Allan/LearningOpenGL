@@ -268,9 +268,11 @@ void pollEvents(App *app, World *world)
             break;
         case SDL_WINDOWEVENT:
             if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+            {
                 resizeViewport(app->window);
-            updateDimentions(app);
-            setAspect(world->camera, ASPECT(app));
+                updateDimentions(app);
+                setAspect(world->camera, ASPECT(app));
+            }
             break;
         case SDL_MOUSEWHEEL:
             app->input->scrollDelta += e.wheel.y;
@@ -352,6 +354,7 @@ int main(int argc, char *argv[])
     addAxis(app->input, createAxis("x", 2, (SDL_Scancode[5]){SDL_SCANCODE_RIGHT, SDL_SCANCODE_D}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LEFT, SDL_SCANCODE_A}));
     addAxis(app->input, createAxis("y", 1, (SDL_Scancode[5]){SDL_SCANCODE_SPACE}, 2, (SDL_Scancode[5]){SDL_SCANCODE_LSHIFT,SDL_SCANCODE_RSHIFT}));
     addAxis(app->input, createAxis("z", 2, (SDL_Scancode[5]){SDL_SCANCODE_UP, SDL_SCANCODE_W}, 2, (SDL_Scancode[5]){SDL_SCANCODE_DOWN, SDL_SCANCODE_S}));
+    addAxis(app->input, createAxis("sprint", 2, (SDL_Scancode[5]){SDL_SCANCODE_LCTRL, SDL_SCANCODE_RCTRL}, 0, NULL));
 
     // Set up world.
 
@@ -359,7 +362,7 @@ int main(int argc, char *argv[])
 
     // Set up camera.
 
-    Camera *camera = createCamera(vec3(0, 0, 3), vec3(0, 0, -1), ASPECT(app), PERSPECTIVE);
+    Camera *camera = createCamera(vec3(0, 0, 3), vec3(0, 0, -1), ASPECT(app), rad(45), PERSPECTIVE);
     setCamera(world, camera);
 
     // Set up shader program.
@@ -385,17 +388,20 @@ int main(int argc, char *argv[])
 
     float pitch = 0;
     float yaw = rad(-90);
-    int fov = 45;
+    int fov = (int) deg(camera->fov);
 
     while (app->running)
     {
         // Poll events such as resizing window, hitting keys, or exiting the app.
         pollEvents(app, world);
 
+        Input *input = app->input;
+
         float movementSpeed = 10.0f;
         float relativeSpeed = movementSpeed * (app->deltaTime / 1000.0f);
 
-        Input *input = app->input;
+        float speedModifier = getAxisValue(input, "sprint");
+        relativeSpeed *= 1 + (speedModifier);
 
         vec3 movementAxes = get3DAxisValue(input, "x", "y", "z");
 
@@ -414,6 +420,9 @@ int main(int argc, char *argv[])
         // Get front.
         cross(camera->worldUp, right, &front);
         norm3(front, &front);
+
+        printVec3(front, true);
+        printVec3(camera->pos, true);
 
         // Cancel out movement when movementAxes has values of 0.
         scalarMult3(&right, &right, 1, movementAxes.x);
@@ -437,7 +446,6 @@ int main(int argc, char *argv[])
         {
             pitch -= input->mouseYDelta / 1000.0f;
             yaw += input->mouseXDelta / 1000.0f;
-            printf("%f %f\n", pitch, yaw);
             fov -= input->scrollDelta;
 
             fov = CAP_AT(fov, 1, 110);
@@ -447,6 +455,8 @@ int main(int argc, char *argv[])
 
             setCamDir(world->camera, vec3(cos(yaw) * cos(pitch), sin(pitch), sin(yaw) * cos(pitch)));
         }
+
+        printf("%f %d\n", pitch, fov);
 
         // Draw to screen
         draw(app, world, shaderProgram);

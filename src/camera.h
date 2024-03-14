@@ -19,9 +19,10 @@ typedef struct
     PROJECTION projectionType;
     mat4 view;
     mat4 projection;
+    float fov;
 } Camera;
 
-Camera *createCamera(vec3 pos, vec3 dir, float aspect, PROJECTION projectionType);
+Camera *createCamera(vec3 pos, vec3 dir, float aspect, float fov, PROJECTION projectionType);
 void setAspect(Camera *camera, float aspect);
 void setCamPos(Camera *camera, vec3 pos);
 void setCamTarget(Camera *camera, vec3 target);
