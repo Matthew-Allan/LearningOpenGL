@@ -77,7 +77,7 @@ vec3 get3DAxisValue(Input *input, char *nameX, char *nameY, char *nameZ)
 
 Input *setUpInput()
 {
-    Input *input = (Input *)malloc(sizeof(input));
+    Input *input = (Input *)malloc(sizeof(Input));
     input->keyboardState = SDL_GetKeyboardState(NULL);
     input->axes = NULL;
     input->mouseXDelta = 0;
