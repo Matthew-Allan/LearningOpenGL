@@ -32,5 +32,6 @@ void updateDimentions(App *app);
 void *readResource(char *relativePath, App *app);
 Image *readImageRsrc(char *relativePath, App *app, bool flipped);
 void tickFrame(App *app);
+int toggleTrackingMouse(App * app);
 
 #endif

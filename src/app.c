@@ -69,8 +69,6 @@ App *setUpApp(SDL_Window *window)
 
     updateDimentions(app);
 
-    SDL_WarpMouseInWindow(app->window, app->w / 2, app->h / 2);
-
     printf("App initialised\n");
 
     return app;
@@ -127,10 +125,29 @@ void tickFrame(App *app)
         app->frames = 0;
         app->prevSec += 100;
     }
-    int mouseX, mouseY;
-    SDL_GetMouseState(&mouseX, &mouseY);
-    SDL_WarpMouseInWindow(app->window, app->w / 2, app->h / 2);
-    app->input->mouseXDelta = mouseX - app->w / 2;
-    app->input->mouseYDelta = mouseY - app->h / 2;
-    app->input->scrollDelta = 0;
+    if(app->input->trackingMouse)
+    {
+        int mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+        SDL_WarpMouseInWindow(app->window, app->w / 2, app->h / 2);
+        app->input->mouseXDelta = mouseX - app->w / 2;
+        app->input->mouseYDelta = mouseY - app->h / 2;
+        app->input->scrollDelta = 0;
+    }
+}
+
+int toggleTrackingMouse(App * app)
+{
+    app->input->trackingMouse = !app->input->trackingMouse;
+    if (SDL_SetRelativeMouseMode(app->input->trackingMouse) != 0)
+    {
+        printf("Could not enable relative mouse mode. Error: %s\n", SDL_GetError());
+        SDL_DestroyWindow(app->window);
+        SDL_Quit();
+        app->running = false;
+        return 1;
+    }
+    if(app->input->trackingMouse)
+        SDL_WarpMouseInWindow(app->window, app->w / 2, app->h / 2);
+    return 0;
 }

@@ -278,14 +278,7 @@ void pollEvents(App *app, World *world)
             app->input->scrollDelta += e.wheel.y;
             break;
         case SDL_MOUSEBUTTONDOWN:
-            app->input->trackingMouse = !app->input->trackingMouse;
-            if (SDL_SetRelativeMouseMode(app->input->trackingMouse) != 0)
-            {
-                printf("Could not enable relative mouse mode. Error: %s\n", SDL_GetError());
-                SDL_DestroyWindow(app->window);
-                SDL_Quit();
-                app->running = false;
-            }
+            toggleTrackingMouse(app);
             break;
         default:
             break;
