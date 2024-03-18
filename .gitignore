@@ -5,3 +5,4 @@ main.app.dSYM
 .vscode
 lib
 include/SDL2
+export
